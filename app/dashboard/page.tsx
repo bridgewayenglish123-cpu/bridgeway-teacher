@@ -43,6 +43,7 @@ export default async function DashboardPage() {
     .eq('teacher_id', teacher.id)
     .eq('status', 'completed')
     .eq('is_active', true)
+    .gte('date', '2026-07-19')
     .order('date', { ascending: false })
     .limit(50)
 
