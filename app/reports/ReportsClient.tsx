@@ -86,7 +86,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: 'rgba(10,30,54,0.55)' }}
             onClick={e => { if (e.target === e.currentTarget) setSelected(null) }}>
-            <div className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-2xl">
+            <div className="w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto sm:rounded-2xl bg-white shadow-2xl">
               {/* Header */}
               <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b"
                 style={{ background: C.navy, borderColor: 'rgba(255,255,255,0.1)' }}>

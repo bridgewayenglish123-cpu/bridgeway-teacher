@@ -65,16 +65,17 @@ export function DashboardClient({
               const s = Array.isArray(l.student) ? l.student[0] : l.student
               const a = Array.isArray(l.account) ? l.account[0] : l.account
               return (
-                <div key={l.id} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
-                  <div className="flex-shrink-0 text-center w-12">
-                    <div className="text-[11px] uppercase tracking-wide" style={{ color: C.muted }}>
-                      {l.date.slice(5, 7)}月
+                <div key={l.id} className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
+                  <div className="flex items-center gap-3 sm:contents">
+                  <div className="flex-shrink-0 text-center w-10 sm:w-12">
+                    <div className="text-[10px] uppercase tracking-wide" style={{ color: C.muted }}>
+                      {l.date.slice(5, 7)}
                     </div>
-                    <div className="font-serif text-[24px] font-medium leading-none" style={{ color: C.navy }}>
+                    <div className="font-serif text-[22px] font-medium leading-none" style={{ color: C.navy }}>
                       {l.date.slice(8)}
                     </div>
                   </div>
-                  <div className="w-px self-stretch" style={{ background: C.line }} />
+                  <div className="hidden sm:block w-px self-stretch" style={{ background: C.line }} />
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-[15px]" style={{ color: C.navy }}>
                       {s?.zh_name ?? '—'}
@@ -84,8 +85,10 @@ export function DashboardClient({
                       {fmtTime(l.time)} · {l.duration ?? '?'} min
                     </div>
                   </div>
+                  </div>
+                  </div>
                   <button onClick={() => setUploadLesson(l)}
-                    className="flex-shrink-0 rounded-xl px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
+                    className="w-full sm:w-auto rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
                     style={{ background: C.navy }}>
                     Upload Report
                   </button>

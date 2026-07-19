@@ -4,9 +4,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import { C } from '@/lib/constants'
 
 const links = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/students', label: 'My Students' },
-  { href: '/reports', label: 'Reports' },
+  { href: '/dashboard', label: 'Dashboard', icon: '⊟' },
+  { href: '/students', label: 'Students', icon: '◉' },
+  { href: '/reports', label: 'Reports', icon: '◫' },
 ]
 
 export function Nav({ teacherName }: { teacherName: string }) {
@@ -21,56 +21,70 @@ export function Nav({ teacherName }: { teacherName: string }) {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b"
-      style={{ background: C.navy, borderColor: 'rgba(255,255,255,0.1)' }}>
-      <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
-        <div className="flex h-[56px] items-center justify-between">
-          {/* Logo */}
-          <div className="font-serif text-[18px] font-medium text-white">
-            Bridgeway <span style={{ color: C.gold }}>Teachers</span>
-          </div>
-
-          {/* Links */}
-          <div className="hidden sm:flex items-center gap-1">
-            {links.map(l => (
-              <a key={l.href} href={l.href}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium transition"
-                style={{
-                  background: pathname === l.href ? 'rgba(255,255,255,0.15)' : 'transparent',
-                  color: pathname === l.href ? '#fff' : 'rgba(255,255,255,0.6)',
-                }}>
-                {l.label}
-              </a>
-            ))}
-          </div>
-
-          {/* 老師名字 + 登出 */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              {teacherName}
-            </span>
-            <button onClick={handleSignOut}
-              className="text-xs px-3 py-1.5 rounded-lg transition"
-              style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
-              登出
-            </button>
+    <>
+      {/* Desktop Nav */}
+      <nav className="hidden sm:block sticky top-0 z-50 border-b"
+        style={{ background: C.navy, borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div className="mx-auto max-w-[1200px] px-5 sm:px-8">
+          <div className="flex h-[56px] items-center justify-between">
+            <div className="font-serif text-[18px] font-medium text-white">
+              Bridgeway <span style={{ color: C.gold }}>Teachers</span>
+            </div>
+            <div className="flex items-center gap-1">
+              {links.map(l => (
+                <a key={l.href} href={l.href}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium transition"
+                  style={{
+                    background: pathname === l.href ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    color: pathname === l.href ? '#fff' : 'rgba(255,255,255,0.6)',
+                  }}>
+                  {l.label}
+                </a>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{teacherName}</span>
+              <button onClick={handleSignOut}
+                className="text-xs px-3 py-1.5 rounded-lg transition"
+                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile links */}
-        <div className="flex sm:hidden gap-1 pb-2">
-          {links.map(l => (
-            <a key={l.href} href={l.href}
-              className="flex-1 text-center py-1.5 rounded-lg text-xs font-medium"
-              style={{
-                background: pathname === l.href ? 'rgba(255,255,255,0.15)' : 'transparent',
-                color: pathname === l.href ? '#fff' : 'rgba(255,255,255,0.5)',
-              }}>
-              {l.label}
-            </a>
-          ))}
+      {/* Mobile Top Bar */}
+      <div className="sm:hidden sticky top-0 z-50 flex h-[52px] items-center justify-between px-4"
+        style={{ background: C.navy }}>
+        <div className="font-serif text-[16px] font-medium text-white">
+          Bridgeway <span style={{ color: C.gold }}>Teachers</span>
         </div>
+        <button onClick={handleSignOut}
+          className="text-xs px-3 py-1.5 rounded-lg"
+          style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
+          Sign Out
+        </button>
       </div>
-    </nav>
+
+      {/* Mobile Bottom Tab Bar */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex border-t"
+        style={{ background: '#fff', borderColor: C.line }}>
+        {links.map(l => {
+          const active = pathname === l.href
+          return (
+            <a key={l.href} href={l.href}
+              className="flex-1 flex flex-col items-center justify-center py-2.5 gap-0.5"
+              style={{ color: active ? C.navy : C.muted }}>
+              <span className="text-[18px] leading-none">{l.icon}</span>
+              <span className="text-[10px] font-medium">{l.label}</span>
+            </a>
+          )
+        })}
+      </nav>
+
+      {/* Mobile bottom padding */}
+      <div className="sm:hidden h-[60px]" />
+    </>
   )
 }
