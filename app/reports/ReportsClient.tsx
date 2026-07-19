@@ -16,158 +16,263 @@ type Report = {
   lesson: { id: string; date: string; time: string | null; duration: number | null; student: { zh_name: string; en_name: string | null } | null } | null
 }
 
-export function ReportsClient({ reports, teacherName }: { reports: Report[]; teacherName: string }) {
-  const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState<Report | null>(null)
+type View = 'students' | 'reports' | 'detail'
 
-  const filtered = useMemo(() => {
-    if (!search) return reports
-    const q = search.toLowerCase()
-    return reports.filter(r => {
-      const lesson = Array.isArray(r.lesson) ? r.lesson[0] : r.lesson
-      const s = lesson ? (Array.isArray(lesson.student) ? lesson.student[0] : lesson.student) : null
-      return s?.zh_name?.toLowerCase().includes(q) || s?.en_name?.toLowerCase().includes(q)
-    })
+export function ReportsClient({ reports }: { reports: Report[] }) {
+  const [search, setSearch] = useState('')
+  const [selectedStudentName, setSelectedStudentName] = useState<string | null>(null)
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const [mobileView, setMobileView] = useState<View>('students')
+
+  const getLesson = (r: Report) => Array.isArray(r.lesson) ? r.lesson[0] : r.lesson
+  const getStudent = (r: Report) => {
+    const l = getLesson(r)
+    return l ? (Array.isArray(l.student) ? l.student[0] : l.student) : null
+  }
+  const getStudentKey = (r: Report) => {
+    const s = getStudent(r)
+    return s?.en_name ?? s?.zh_name ?? '—'
+  }
+
+  // 學生列表，依最新報告排序
+  const studentList = useMemo(() => {
+    const map = new Map<string, { name: string; zhName: string; latestDate: string; count: number }>()
+    for (const r of reports) {
+      const s = getStudent(r)
+      const l = getLesson(r)
+      const key = s?.en_name ?? s?.zh_name ?? '—'
+      const date = l?.date ?? r.created_at.slice(0, 10)
+      const existing = map.get(key)
+      if (!existing || date > existing.latestDate) {
+        map.set(key, {
+          name: s?.en_name ?? s?.zh_name ?? '—',
+          zhName: s?.zh_name ?? '',
+          latestDate: date,
+          count: (existing?.count ?? 0) + 1,
+        })
+      } else {
+        existing.count++
+      }
+    }
+    return [...map.values()]
+      .filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.zhName.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => b.latestDate.localeCompare(a.latestDate))
   }, [reports, search])
 
-  return (
-    <main className="mx-auto max-w-[900px] px-5 py-8 sm:px-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-serif text-[28px] font-medium" style={{ color: C.navy }}>Reports</h1>
-        <span className="text-sm" style={{ color: C.muted }}>{filtered.length} reports</span>
-      </div>
+  // 選定學生的報告列表
+  const studentReports = useMemo(() => {
+    if (!selectedStudentName) return []
+    return reports
+      .filter(r => getStudentKey(r) === selectedStudentName)
+      .sort((a, b) => {
+        const da = getLesson(a)?.date ?? a.created_at
+        const db = getLesson(b)?.date ?? b.created_at
+        return db.localeCompare(da)
+      })
+  }, [reports, selectedStudentName])
 
-      <input type="text" placeholder="Search by student name..."
-        value={search} onChange={e => setSearch(e.target.value)}
-        className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none mb-5"
-        style={{ borderColor: C.line, color: C.navy }} />
+  const selectStudent = (name: string) => {
+    setSelectedStudentName(name)
+    setSelectedReport(null)
+    setMobileView('reports')
+  }
 
-      <div className="flex flex-col gap-3">
-        {filtered.map(r => {
-          const lesson = Array.isArray(r.lesson) ? r.lesson[0] : r.lesson
-          const student = lesson ? (Array.isArray(lesson.student) ? lesson.student[0] : lesson.student) : null
-          const analysis = r.analysis_en ?? r.analysis_zh
-          return (
-            <div key={r.id} className="flex items-center gap-4 rounded-2xl bg-white p-5 shadow-sm border-l-[3px] border-yellow-400">
-              <div className="flex-shrink-0 text-center w-12">
-                <div className="text-[11px]" style={{ color: C.muted }}>{lesson?.date?.slice(5,7)}</div>
-                <div className="font-serif text-[22px] font-medium" style={{ color: C.navy }}>{lesson?.date?.slice(8)}</div>
-              </div>
-              <div className="w-px self-stretch" style={{ background: C.line }} />
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[15px]" style={{ color: C.navy }}>
-                  {student?.en_name ? `${student.en_name} (${student.zh_name})` : student?.zh_name ?? '—'}
-                </div>
-                {analysis?.headline && (
-                  <div className="text-[13px] mt-0.5 line-clamp-1" style={{ color: C.muted }}>
-                    {analysis.headline}
-                  </div>
-                )}
-              </div>
-              <button onClick={() => setSelected(r)}
-                className="flex-shrink-0 text-xs px-3 py-1.5 rounded-lg font-medium transition hover:opacity-80"
-                style={{ background: '#EAF0F6', color: C.navy }}>
-                View
-              </button>
-            </div>
-          )
-        })}
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-sm" style={{ color: C.muted }}>No reports found.</div>
-        )}
-      </div>
+  const selectReport = (r: Report) => {
+    setSelectedReport(r)
+    setMobileView('detail')
+  }
 
-      {/* Report Detail Modal */}
-      {selected && (() => {
-        const lesson = Array.isArray(selected.lesson) ? selected.lesson[0] : selected.lesson
-        const student = lesson ? (Array.isArray(lesson.student) ? lesson.student[0] : lesson.student) : null
-        const analysis = selected.analysis_en ?? selected.analysis_zh
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(10,30,54,0.55)' }}
-            onClick={e => { if (e.target === e.currentTarget) setSelected(null) }}>
-            <div className="w-full sm:max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-y-auto sm:rounded-2xl bg-white shadow-2xl">
-              {/* Header */}
-              <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b"
-                style={{ background: C.navy, borderColor: 'rgba(255,255,255,0.1)' }}>
-                <div>
-                  <div className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    {lesson?.date} · {student?.en_name ?? student?.zh_name} · {lesson?.duration} min
-                  </div>
-                  <div className="text-[15px] font-semibold text-white">{analysis?.headline}</div>
-                </div>
-                <button onClick={() => setSelected(null)} className="text-white/60 hover:text-white text-lg">✕</button>
-              </div>
-
-              <div className="p-6 space-y-5">
-                {/* Summary */}
-                {analysis?.body && (
-                  <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Summary</div>
-                    <p className="text-[15px] leading-[1.8]" style={{ color: C.navy }}>{analysis.body}</p>
-                  </div>
-                )}
-
-                {/* Strengths */}
-                {selected.strengths && selected.strengths.length > 0 && (
-                  <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>What They Did Well</div>
-                    <ul className="space-y-2">
-                      {selected.strengths.map((s, i) => (
-                        <li key={i} className="border-l-[3px] border-yellow-400 pl-4 text-[14px] leading-[1.7]" style={{ color: C.navy }}>
-                          {s.en ?? s.zh}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Errors */}
-                {selected.errors && selected.errors.length > 0 && (
-                  <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Areas to Improve</div>
-                    <ul className="space-y-4">
-                      {selected.errors.map((e, i) => (
-                        <li key={i} className="border-l-[3px] pl-4" style={{ borderColor: C.line }}>
-                          <div className="font-semibold text-[14px] mb-1" style={{ color: C.navy }}>
-                            {e.pattern_en ?? e.pattern} {e.count ? `× ${e.count}` : ''}
-                          </div>
-                          {e.example && <div className="text-[13px] line-through" style={{ color: C.muted }}>{e.example}</div>}
-                          {e.correction && <div className="text-[14px] font-semibold" style={{ color: C.navy }}>{e.correction}</div>}
-                          {e.tip_en && <div className="text-[13px] mt-1" style={{ color: C.muted }}>{e.tip_en}</div>}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Vocabulary */}
-                {selected.vocabulary && selected.vocabulary.length > 0 && (
-                  <div>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Vocabulary ({selected.vocabulary.length})</div>
-                    <div className="grid grid-cols-2 gap-2">
-                      {selected.vocabulary.map((v, i) => (
-                        <div key={i} className="rounded-xl px-3 py-2" style={{ background: '#F5F7FA' }}>
-                          <div className="font-semibold text-[14px]" style={{ color: C.navy }}>{v.word}</div>
-                          {v.definition_en && <div className="text-[12px] mt-0.5" style={{ color: C.muted }}>{v.definition_en}</div>}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Next Focus */}
-                {selected.next_focus && (
-                  <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
-                    <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: '#C2991F' }}>Next Lesson Focus</div>
-                    <p className="text-[14px] leading-[1.75]" style={{ color: C.navy }}>{selected.next_focus}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+  // ── Report Detail ──────────────────────────────────────────────────────────
+  const ReportDetail = ({ report }: { report: Report }) => {
+    const lesson = getLesson(report)
+    const analysis = report.analysis_en ?? report.analysis_zh
+    return (
+      <div className="h-full overflow-y-auto">
+        {/* Header */}
+        <div className="px-5 py-4 border-b" style={{ borderColor: C.line }}>
+          <button className="sm:hidden text-sm mb-2" style={{ color: C.navy }}
+            onClick={() => setMobileView('reports')}>← Back</button>
+          <div className="text-xs mb-1" style={{ color: C.muted }}>
+            {lesson?.date} · {lesson?.duration} min
           </div>
-        )
-      })()}
-    </main>
+          <div className="font-serif text-[18px] font-semibold leading-snug" style={{ color: C.navy }}>
+            {analysis?.headline ?? '—'}
+          </div>
+          {report.milestone && (
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+              style={{ background: '#FBF8EF', color: C.gold, border: '1px solid rgba(194,153,47,0.3)' }}>
+              🏆 {report.milestone}
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 py-4 space-y-5">
+          {/* Summary */}
+          {analysis?.body && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Summary</div>
+              <p className="text-[14px] leading-[1.85]" style={{ color: C.navy }}>{analysis.body}</p>
+            </div>
+          )}
+
+          {/* Strengths */}
+          {report.strengths && report.strengths.length > 0 && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>What They Did Well</div>
+              <ul className="space-y-2">
+                {report.strengths.map((s, i) => (
+                  <li key={i} className="border-l-[3px] border-yellow-400 pl-3 text-[13px] leading-[1.7]" style={{ color: C.navy }}>
+                    {s.en ?? s.zh}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Errors */}
+          {report.errors && report.errors.length > 0 && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Areas to Improve</div>
+              <ul className="space-y-4">
+                {report.errors.map((e, i) => (
+                  <li key={i} className="border-l-[3px] pl-3" style={{ borderColor: C.line }}>
+                    <div className="font-semibold text-[13px] mb-1" style={{ color: C.navy }}>
+                      {e.pattern_en ?? e.pattern} {e.count ? `× ${e.count}` : ''}
+                    </div>
+                    {e.example && <div className="text-[12px] line-through" style={{ color: C.muted }}>{e.example}</div>}
+                    {e.correction && <div className="text-[13px] font-semibold" style={{ color: C.navy }}>{e.correction}</div>}
+                    {e.tip_en && <div className="text-[12px] mt-1" style={{ color: C.muted }}>{e.tip_en}</div>}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Vocabulary */}
+          {report.vocabulary && report.vocabulary.length > 0 && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>
+                Vocabulary ({report.vocabulary.length})
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {report.vocabulary.map((v, i) => (
+                  <div key={i} className="rounded-xl px-3 py-2" style={{ background: '#F5F7FA' }}>
+                    <div className="font-semibold text-[13px]" style={{ color: C.navy }}>{v.word}</div>
+                    {v.definition_en && <div className="text-[11px] mt-0.5" style={{ color: C.muted }}>{v.definition_en}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Next Focus */}
+          {report.next_focus && (
+            <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.gold }}>Next Lesson Focus</div>
+              <p className="text-[13px] leading-[1.75]" style={{ color: C.navy }}>{report.next_focus}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 52px)' }}>
+      {/* ── Desktop: 3-col / Mobile: stack ── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Col 1: Student List */}
+        <div className={`${mobileView === 'students' ? 'flex' : 'hidden'} sm:flex flex-col border-r`}
+          style={{ width: '100%', maxWidth: 220, borderColor: C.line, minWidth: 0 }}>
+          <div className="p-3 border-b" style={{ borderColor: C.line }}>
+            <div className="text-[13px] font-semibold mb-2 px-1" style={{ color: C.navy }}>Reports</div>
+            <input type="text" placeholder="Search student..."
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full rounded-lg border px-3 py-1.5 text-sm outline-none"
+              style={{ borderColor: C.line, color: C.navy }} />
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {studentList.map(s => {
+              const active = selectedStudentName === s.name
+              return (
+                <button key={s.name} onClick={() => selectStudent(s.name)}
+                  className="w-full text-left px-4 py-3 transition-colors"
+                  style={{
+                    background: active ? '#EAF0F6' : 'transparent',
+                    borderLeft: active ? `3px solid ${C.navy}` : '3px solid transparent',
+                  }}>
+                  <div className="font-medium text-sm" style={{ color: C.navy }}>{s.name}</div>
+                  {s.zhName && s.zhName !== s.name && (
+                    <div className="text-xs" style={{ color: C.muted }}>{s.zhName}</div>
+                  )}
+                  <div className="text-xs mt-0.5" style={{ color: C.muted }}>
+                    {s.count} report{s.count > 1 ? 's' : ''} · {s.latestDate.slice(5)}
+                  </div>
+                </button>
+              )
+            })}
+            {studentList.length === 0 && (
+              <div className="p-4 text-xs text-center" style={{ color: C.muted }}>No students found.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Col 2: Report List */}
+        <div className={`${mobileView === 'reports' ? 'flex' : 'hidden'} sm:flex flex-col border-r`}
+          style={{ width: '100%', maxWidth: 260, borderColor: C.line, minWidth: 0 }}>
+          <div className="px-4 py-3 border-b flex items-center gap-2" style={{ borderColor: C.line }}>
+            <button className="sm:hidden text-sm" style={{ color: C.navy }}
+              onClick={() => setMobileView('students')}>←</button>
+            <span className="text-sm font-semibold" style={{ color: C.navy }}>
+              {selectedStudentName ?? 'Select a student'}
+            </span>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            {studentReports.map(r => {
+              const lesson = getLesson(r)
+              const active = selectedReport?.id === r.id
+              const analysis = r.analysis_en ?? r.analysis_zh
+              return (
+                <button key={r.id} onClick={() => selectReport(r)}
+                  className="w-full text-left px-4 py-3 border-b transition-colors"
+                  style={{
+                    background: active ? '#EAF0F6' : 'transparent',
+                    borderLeftWidth: 3,
+                    borderLeftStyle: 'solid',
+                    borderLeftColor: active ? C.gold : 'transparent',
+                    borderBottomColor: C.line,
+                  }}>
+                  <div className="text-sm font-medium mb-0.5" style={{ color: C.navy }}>
+                    {lesson?.date ?? '—'}
+                  </div>
+                  <div className="text-xs line-clamp-2" style={{ color: C.muted }}>
+                    {analysis?.headline ?? '—'}
+                  </div>
+                </button>
+              )
+            })}
+            {studentReports.length === 0 && selectedStudentName && (
+              <div className="p-4 text-xs text-center" style={{ color: C.muted }}>No reports yet.</div>
+            )}
+            {!selectedStudentName && (
+              <div className="p-4 text-xs text-center hidden sm:block" style={{ color: C.muted }}>← Select a student</div>
+            )}
+          </div>
+        </div>
+
+        {/* Col 3: Report Detail */}
+        <div className={`${mobileView === 'detail' ? 'flex' : 'hidden'} sm:flex flex-col flex-1`} style={{ minWidth: 0 }}>
+          {selectedReport ? (
+            <ReportDetail report={selectedReport} />
+          ) : (
+            <div className="hidden sm:flex items-center justify-center flex-1 text-sm" style={{ color: C.muted }}>
+              ← Select a report
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
   )
 }
