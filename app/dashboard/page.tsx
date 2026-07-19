@@ -16,9 +16,13 @@ export default async function DashboardPage() {
   // 找對應的老師
   const { data: teacher } = await admin
     .from('teachers')
-    .select('id, teacher_name, teacher_type, active_status')
+    .select('id, teacher_name, teacher_type, active_status, role')
     .eq('auth_user_id', user.id)
     .single()
+
+  if (teacher?.role === 'admin') {
+    redirect('/admin')
+  }
 
   if (!teacher) {
     return (
