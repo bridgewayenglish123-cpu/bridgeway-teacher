@@ -54,7 +54,7 @@ export function ReportsClient({ reports }: { reports: Report[] }) {
         existing.count++
       }
     }
-    return [...map.values()]
+    return Array.from(map.values())
       .filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.zhName.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => b.latestDate.localeCompare(a.latestDate))
   }, [reports, search])
