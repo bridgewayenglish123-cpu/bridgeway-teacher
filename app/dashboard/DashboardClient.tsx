@@ -29,11 +29,7 @@ export function DashboardClient({
   const todayLessons = upcomingLessons.filter(l => l.date === todayStr)
   const futureLessons = upcomingLessons.filter(l => l.date > todayStr)
 
-  const fmtDate = (d: string) => {
-    const [y, m, day] = d.split('-')
-    return `${m}/${day}`
-  }
-  const fmtTime = (t: string | null) => t ? t.slice(0, 5) : ''
+  const fmtTime = (t: string | null) => t ? t.slice(0, 5) : ''''
 
   return (
     <main className="mx-auto max-w-[1000px] px-5 py-8 sm:px-8 space-y-8">

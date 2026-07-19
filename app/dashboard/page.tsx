@@ -50,10 +50,6 @@ export default async function DashboardPage() {
   const today = new Date()
   const tw = new Date(today.getTime() + 8 * 60 * 60 * 1000)
   const todayStr = tw.toISOString().slice(0, 10)
-  const weekStart = new Date(tw)
-  weekStart.setDate(tw.getDate() - tw.getDay())
-  const weekStartStr = weekStart.toISOString().slice(0, 10)
-
   const { data: upcomingLessons } = await admin
     .from('lessons')
     .select(`
@@ -71,7 +67,7 @@ export default async function DashboardPage() {
 
   // 待上傳報告 = 已完課但無報告
   const pending = (pendingLessons ?? []).filter(l =>
-    !l.lesson_reports || (l.lesson_reports as any[]).length === 0
+    !l.lesson_reports || (l.lesson_reports as { id: string }[]).length === 0
   )
 
   return (
@@ -79,8 +75,8 @@ export default async function DashboardPage() {
       <Nav teacherName={teacher.teacher_name} />
       <DashboardClient
         teacher={teacher}
-        pendingReports={pending as any[]}
-        upcomingLessons={(upcomingLessons ?? []) as any[]}
+        pendingReports={pending as unknown as import('./DashboardClient').Lesson[]}
+        upcomingLessons={(upcomingLessons ?? []) as unknown as import('./DashboardClient').Lesson[]}
         todayStr={todayStr}
       />
     </>
