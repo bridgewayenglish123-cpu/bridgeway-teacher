@@ -29,7 +29,7 @@ export function UploadReportModal({
   const [manualNextFocus, setManualNextFocus] = useState('')
 
   const busy = status === 'uploading' || status === 'analyzing'
-  const label = { idle: '生成報告', uploading: '上傳中…', analyzing: '生成中…', done: '完成', error: '重試' }
+  const label = { idle: 'Generate Report', uploading: 'Uploading…', analyzing: '生成中…', done: '完成', error: 'Retry' }
 
   const handleVttSubmit = async () => {
     if (!file) return
@@ -83,46 +83,46 @@ export function UploadReportModal({
       style={{ background: 'rgba(10,30,54,0.55)' }}
       onClick={e => { if (e.target === e.currentTarget && !busy) onClose() }}>
       <div className="w-full max-w-md rounded-2xl p-5 space-y-4 overflow-y-auto max-h-[90vh] bg-white shadow-2xl">
-        <h3 className="text-base font-semibold" style={{ color: C.navy }}>生成 AI 學習報告</h3>
+        <h3 className="text-base font-semibold" style={{ color: C.navy }}>Generate AI Lesson Report</h3>
 
         <div className="flex gap-1 rounded-lg p-1" style={{ background: '#EAF0F6' }}>
           {(['vtt', 'manual'] as Mode[]).map(m => (
             <button key={m} onClick={() => setMode(m)} disabled={busy}
               className="flex-1 rounded-md py-1.5 text-xs font-semibold transition"
               style={{ background: mode === m ? C.navy : 'transparent', color: mode === m ? '#fff' : C.muted }}>
-              {m === 'vtt' ? '上傳 VTT（AI 生成）' : '手動填寫'}
+              {m === 'vtt' ? 'Upload VTT (AI)' : 'Manual Entry'}
             </button>
           ))}
         </div>
 
         <div className="rounded-lg px-3 py-2.5 text-sm space-y-0.5" style={{ background: '#EAF0F6', color: C.navy }}>
-          <div><span style={{ color: C.muted }}>學生：</span>{studentName}</div>
-          <div><span style={{ color: C.muted }}>日期：</span>{lessonDate}</div>
-          <div><span style={{ color: C.muted }}>老師：</span>{teacherName}</div>
+          <div><span style={{ color: C.muted }}>Student: </span>{studentName}</div>
+          <div><span style={{ color: C.muted }}>Date: </span>{lessonDate}</div>
+          <div><span style={{ color: C.muted }}>Teacher: </span>{teacherName}</div>
         </div>
 
         {status === 'done' ? (
           <>
             <div className="rounded-lg p-3 text-sm" style={{ background: '#E8F5E9', color: C.green }}>
-              報告已生成，學生已收到通知。
+              Report generated. Student has been notified.
             </div>
             <div className="flex justify-end">
               <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-medium"
-                style={{ background: C.navy, color: '#fff' }}>關閉</button>
+                style={{ background: C.navy, color: '#fff' }}>Close</button>
             </div>
           </>
         ) : mode === 'vtt' ? (
           <>
             <div>
-              <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>老師手記（選填）</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>Teacher's Note (optional)</label>
               <textarea className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
                 style={{ borderColor: C.line, color: C.navy, minHeight: 72, resize: 'vertical' }}
-                placeholder="這堂課有什麼特別的觀察？" value={note}
+                placeholder="Any special observations from this lesson?" value={note}
                 onChange={e => setNote(e.target.value)} disabled={busy} />
             </div>
             <div>
               <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>
-                VTT 轉錄檔 <span style={{ color: C.red }}>*</span>
+                VTT Transcript File <span style={{ color: C.red }}>*</span>
               </label>
               <input type="file" accept=".vtt" className="w-full text-sm"
                 onChange={e => setFile(e.target.files?.[0] ?? null)} disabled={busy} />
@@ -130,16 +130,16 @@ export function UploadReportModal({
             </div>
             {status === 'error' && (
               <div className="rounded-lg p-3 text-sm" style={{ background: '#FEF2F2', color: C.red }}>
-                發生錯誤。{errorMsg ? `（${errorMsg}）` : '請再試一次。'}
+                An error occurred.{errorMsg ? `（${errorMsg}）` : 'Please try again.'}
               </div>
             )}
             <div className="flex items-center justify-end gap-2">
               {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>
-                {status === 'uploading' ? '上傳中…' : 'AI 分析中，約需 30–60 秒…'}
+                {status === 'uploading' ? 'Uploading…' : 'AI analyzing, ~30–60 seconds…'}
               </span>}
               <button onClick={onClose} disabled={busy}
                 className="px-4 py-2 rounded-lg text-sm font-medium border"
-                style={{ borderColor: C.line, color: C.muted }}>關閉</button>
+                style={{ borderColor: C.line, color: C.muted }}>Close</button>
               <button onClick={handleVttSubmit} disabled={!file || busy}
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
                 style={{ background: C.navy }}>{label[status]}</button>
@@ -149,12 +149,12 @@ export function UploadReportModal({
           <>
             <div className="space-y-3">
               {[
-                { label: '學生課堂表現 *', value: manualPerformance, set: setManualPerformance, placeholder: '例：今天主動提問很多，過去式動詞錯了幾次...', required: true, rows: 4 },
-                { label: '本課重點單字（逗號分隔）', value: manualVocab, set: setManualVocab, placeholder: '例：camouflage, predator, ancient', rows: 1 },
-                { label: '本課重點片語（逗號分隔）', value: manualPhrases, set: setManualPhrases, placeholder: '例：set off, travel light', rows: 1 },
-                { label: '需要加強的地方', value: manualErrors, set: setManualErrors, placeholder: '例：過去式動詞用錯 4 次', rows: 2 },
-                { label: '下堂課建議', value: manualNextFocus, set: setManualNextFocus, placeholder: '例：練習過去式口說', rows: 2 },
-                { label: '老師手記（給學生看）', value: note, set: setNote, placeholder: '給學生的話', rows: 2 },
+                { label: 'Student Performance *', value: manualPerformance, set: setManualPerformance, placeholder: 'e.g. Asked many questions today, made several past tense errors...', required: true, rows: 4 },
+                { label: 'Key Vocabulary (comma separated)', value: manualVocab, set: setManualVocab, placeholder: 'e.g. camouflage, predator, ancient', rows: 1 },
+                { label: 'Key Phrases (comma separated)', value: manualPhrases, set: setManualPhrases, placeholder: 'e.g. set off, travel light', rows: 1 },
+                { label: 'Areas to Improve', value: manualErrors, set: setManualErrors, placeholder: 'e.g. Past tense errors x4, incomplete comparisons', rows: 2 },
+                { label: 'Next Lesson Focus', value: manualNextFocus, set: setManualNextFocus, placeholder: 'e.g. Practice past tense in speaking', rows: 2 },
+                { label: 'Teacher's Note (shown to student)', value: note, set: setNote, placeholder: 'A note for the student...', rows: 2 },
               ].map(f => (
                 <div key={f.label}>
                   <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>{f.label}</label>
@@ -174,14 +174,14 @@ export function UploadReportModal({
             </div>
             {status === 'error' && (
               <div className="rounded-lg p-3 text-sm" style={{ background: '#FEF2F2', color: C.red }}>
-                發生錯誤。{errorMsg ? `（${errorMsg}）` : '請再試一次。'}
+                An error occurred.{errorMsg ? `（${errorMsg}）` : 'Please try again.'}
               </div>
             )}
             <div className="flex items-center justify-end gap-2">
-              {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>AI 生成中，約需 30–60 秒…</span>}
+              {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>AI generating, ~30–60 seconds…</span>}
               <button onClick={onClose} disabled={busy}
                 className="px-4 py-2 rounded-lg text-sm font-medium border"
-                style={{ borderColor: C.line, color: C.muted }}>關閉</button>
+                style={{ borderColor: C.line, color: C.muted }}>Close</button>
               <button onClick={handleManualSubmit} disabled={!manualPerformance.trim() || busy}
                 className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
                 style={{ background: C.navy }}>{label[status]}</button>

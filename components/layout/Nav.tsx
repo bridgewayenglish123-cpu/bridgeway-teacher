@@ -4,9 +4,9 @@ import { useRouter, usePathname } from 'next/navigation'
 import { C } from '@/lib/constants'
 
 const links = [
-  { href: '/dashboard', label: '首頁' },
-  { href: '/students', label: '我的學生' },
-  { href: '/reports', label: '報告管理' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/students', label: 'My Students' },
+  { href: '/reports', label: 'Reports' },
 ]
 
 export function Nav({ teacherName }: { teacherName: string }) {
@@ -27,7 +27,7 @@ export function Nav({ teacherName }: { teacherName: string }) {
         <div className="flex h-[56px] items-center justify-between">
           {/* Logo */}
           <div className="font-serif text-[18px] font-medium text-white">
-            Bridgeway <span style={{ color: C.gold }}>Teacher</span>
+            Bridgeway <span style={{ color: C.gold }}>Teachers</span>
           </div>
 
           {/* Links */}
@@ -47,7 +47,7 @@ export function Nav({ teacherName }: { teacherName: string }) {
           {/* 老師名字 + 登出 */}
           <div className="flex items-center gap-3">
             <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
-              {teacherName} 老師
+              {teacherName}
             </span>
             <button onClick={handleSignOut}
               className="text-xs px-3 py-1.5 rounded-lg transition"

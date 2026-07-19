@@ -37,17 +37,17 @@ export function DashboardClient({
       {/* 歡迎 */}
       <div>
         <h1 className="font-serif text-[28px] font-medium" style={{ color: C.navy }}>
-          早安，{teacher.teacher_name} 老師。
+          Hello, {teacher.teacher_name}.
         </h1>
         <p className="mt-1 text-sm" style={{ color: C.muted }}>
-          {new Date().toLocaleDateString('zh-TW', { month: 'long', day: 'numeric', weekday: 'long' })}
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
         </p>
       </div>
 
-      {/* 待上傳報告 */}
+      {/* Pending Reports */}
       <section>
         <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-[18px] font-semibold" style={{ color: C.navy }}>待上傳報告</h2>
+          <h2 className="text-[18px] font-semibold" style={{ color: C.navy }}>Pending Reports</h2>
           {pending.length > 0 && (
             <span className="rounded-full px-2 py-0.5 text-xs font-bold text-white"
               style={{ background: C.red }}>{pending.length}</span>
@@ -57,7 +57,7 @@ export function DashboardClient({
         {pending.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed p-8 text-center"
             style={{ borderColor: C.line }}>
-            <p className="text-sm" style={{ color: C.muted }}>🎉 所有課程報告都已上傳！</p>
+            <p className="text-sm" style={{ color: C.muted }}>🎉 All lesson reports are up to date!</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -87,7 +87,7 @@ export function DashboardClient({
                   <button onClick={() => setUploadLesson(l)}
                     className="flex-shrink-0 rounded-xl px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                     style={{ background: C.navy }}>
-                    上傳報告
+                    Upload Report
                   </button>
                 </div>
               )
@@ -96,10 +96,10 @@ export function DashboardClient({
         )}
       </section>
 
-      {/* 今日課程 */}
+      {/* Today's Lessons */}
       {todayLessons.length > 0 && (
         <section>
-          <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>今日課程</h2>
+          <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>Today's Lessons</h2>
           <div className="flex flex-col gap-3">
             {todayLessons.map(l => {
               const s = Array.isArray(l.student) ? l.student[0] : l.student
@@ -126,10 +126,10 @@ export function DashboardClient({
         </section>
       )}
 
-      {/* 即將到來的課程 */}
+      {/* Upcoming Lessons */}
       {futureLessons.length > 0 && (
         <section>
-          <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>即將到來的課程</h2>
+          <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>Upcoming Lessons</h2>
           <div className="flex flex-col gap-2">
             {futureLessons.map(l => {
               const s = Array.isArray(l.student) ? l.student[0] : l.student

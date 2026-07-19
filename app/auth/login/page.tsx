@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError(null)
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) {
-      setError('Email 或密碼不正確，請再試一次。')
+      setError('Incorrect email or password. Please try again.')
       setLoading(false)
     } else {
       router.push('/dashboard')
@@ -35,12 +35,12 @@ export default function LoginPage() {
           <div className="font-serif text-[28px] font-medium mb-1" style={{ color: C.navy }}>
             Bridgeway <span style={{ color: C.gold }}>Teacher</span>
           </div>
-          <div className="text-sm" style={{ color: C.muted }}>老師工作台</div>
+          <div className="text-sm" style={{ color: C.muted }}>Teacher Portal</div>
         </div>
 
         {/* Card */}
         <div className="rounded-2xl p-6 space-y-4 shadow-md" style={{ background: C.card }}>
-          <h1 className="text-lg font-semibold" style={{ color: C.navy }}>登入</h1>
+          <h1 className="text-lg font-semibold" style={{ color: C.navy }}>Sign In</h1>
 
           <div>
             <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>Email</label>
@@ -69,7 +69,7 @@ export default function LoginPage() {
           <button onClick={handleLogin} disabled={loading || !email || !password}
             className="w-full rounded-lg py-2.5 text-sm font-semibold transition disabled:opacity-50"
             style={{ background: C.navy, color: '#fff' }}>
-            {loading ? '登入中…' : '登入'}
+            {loading ? 'Sign In中…' : 'Sign In'}
           </button>
         </div>
       </div>
