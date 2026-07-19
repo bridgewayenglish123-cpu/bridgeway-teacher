@@ -20,31 +20,43 @@ export default async function StudentsPage() {
 
   if (!teacher) redirect('/dashboard')
 
-  // 找這位老師最近有 scheduled 課程的學生（active 帳戶）
-  const { data: lessons } = await admin
-    .from('lessons')
-    .select(`
-      student_id,
-      student:students!student_id(id, zh_name, en_name, status),
-      account:accounts!account_id(id, course_label, total_lessons, status_override, is_trial)
-    `)
+  // 找排課規則 teacher_id 是這位老師的帳戶
+  const { data: rules } = await admin
+    .from('schedule_rules')
+    .select('account_id')
     .eq('teacher_id', teacher.id)
-    .eq('is_active', true)
-    .eq('status', 'scheduled')
-    .order('date', { ascending: true })
+    .eq('active_status', 'Active')
 
-  // 去重，每個學生只留一筆
+  const accountIds = [...new Set((rules ?? []).map(r => r.account_id))]
+
+  if (accountIds.length === 0) {
+    return (
+      <>
+        <Nav teacherName={teacher.teacher_name} />
+        <StudentsClient students={[]} />
+      </>
+    )
+  }
+
+  // 找這些帳戶的學生
+  const { data: accounts } = await admin
+    .from('accounts')
+    .select(`
+      id, course_label, total_lessons, status_override, is_trial,
+      student:students!student_id(id, zh_name, en_name, status)
+    `)
+    .in('id', accountIds)
+
+  // 去重
   const seen = new Set<string>()
   const students: any[] = []
 
-  for (const l of lessons ?? []) {
-    const s = Array.isArray(l.student) ? l.student[0] : l.student
-    const a = Array.isArray(l.account) ? l.account[0] : l.account
+  for (const acc of accounts ?? []) {
+    const s = Array.isArray(acc.student) ? acc.student[0] : acc.student
     if (!s || seen.has(s.id)) continue
-    // 只顯示 active/trial 狀態的學生
     if (s.status !== 'Active' && s.status !== 'Trial') continue
     seen.add(s.id)
-    students.push({ student: s, account: a })
+    students.push({ student: s, account: acc })
   }
 
   return (
