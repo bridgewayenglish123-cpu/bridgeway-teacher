@@ -81,10 +81,9 @@ export function StudentsClient({ students }: { students: StudentRow[] }) {
                   {s.en_name ?? s.zh_name}
                   <span className="ml-2 text-sm font-normal" style={{ color: C.muted }}>({s.zh_name})</span>
                 </div>
-                {a && (
-                  <div className="text-[13px] mt-0.5" style={{ color: C.muted }}>
-                    {a.course_label}
-                    {a.is_trial && <span className="ml-2 text-[11px] px-1.5 py-0.5 rounded" style={{ background: '#FFF8E1', color: '#F57F17' }}>Trial</span>}
+                {a?.is_trial && (
+                  <div className="mt-0.5">
+                    <span className="text-[11px] px-1.5 py-0.5 rounded" style={{ background: '#FFF8E1', color: '#F57F17' }}>Trial</span>
                   </div>
                 )}
               </div>

@@ -20,26 +20,30 @@ export default async function StudentsPage() {
 
   if (!teacher) redirect('/dashboard')
 
-  const { data: lessons } = await admin
-    .from('lessons')
+  // 只找 active 帳戶且最近課程是這位老師上的學生
+  // 用 students.current_teacher_id 或最近 30 天有上過課
+  const { data: accounts } = await admin
+    .from('accounts')
     .select(`
-      id, date, status,
-      student:students!student_id(id, zh_name, en_name, status),
-      account:accounts!account_id(id, course_label, total_lessons, status_override, is_trial)
+      id, course_label, total_lessons, status_override, is_trial,
+      student:students!student_id(id, zh_name, en_name, status, current_teacher_id)
     `)
-    .eq('teacher_id', teacher.id)
-    .eq('is_active', true)
-    .order('date', { ascending: false })
+    .in('status_override', ['Active', 'Trial', null])
+    .not('status_override', 'eq', 'Closed')
+    .not('status_override', 'eq', 'Completed')
 
-  // 去重，每個學生只留最新
+  // 篩選：學生的 current_teacher_id 是這位老師
   const seen = new Set<string>()
   const students: any[] = []
-  for (const l of lessons ?? []) {
-    const s = Array.isArray(l.student) ? l.student[0] : l.student
-    const a = Array.isArray(l.account) ? l.account[0] : l.account
-    if (s && !seen.has(s.id)) {
+
+  for (const acc of accounts ?? []) {
+    const s = Array.isArray(acc.student) ? acc.student[0] : acc.student
+    if (!s || seen.has(s.id)) continue
+
+    // 只顯示 current_teacher_id 是這位老師的學生
+    if (s.current_teacher_id === teacher.id) {
       seen.add(s.id)
-      students.push({ student: s, account: a, latestDate: l.date })
+      students.push({ student: s, account: acc })
     }
   }
 
