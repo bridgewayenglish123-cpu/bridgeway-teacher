@@ -75,8 +75,8 @@ export default async function DashboardPage() {
       <Nav teacherName={teacher.teacher_name} />
       <DashboardClient
         teacher={teacher}
-        pendingReports={pending as unknown as import('./DashboardClient').Lesson[]}
-        upcomingLessons={(upcomingLessons ?? []) as unknown as import('./DashboardClient').Lesson[]}
+        pendingReports={pending as any}
+        upcomingLessons={(upcomingLessons ?? []) as any}
         todayStr={todayStr}
       />
     </>
