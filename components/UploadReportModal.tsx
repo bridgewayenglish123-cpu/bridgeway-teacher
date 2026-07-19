@@ -154,7 +154,7 @@ export function UploadReportModal({
                 { label: 'Key Phrases (comma separated)', value: manualPhrases, set: setManualPhrases, placeholder: 'e.g. set off, travel light', rows: 1 },
                 { label: 'Areas to Improve', value: manualErrors, set: setManualErrors, placeholder: 'e.g. Past tense errors x4, incomplete comparisons', rows: 2 },
                 { label: 'Next Lesson Focus', value: manualNextFocus, set: setManualNextFocus, placeholder: 'e.g. Practice past tense in speaking', rows: 2 },
-                { label: "Teacher's Note (shown to student)", value: note, set: setNote, placeholder: 'A note for the student...', rows: 2 },
+                { label: "Teacher Note (shown to student)", value: note, set: setNote, placeholder: 'A note for the student...', rows: 2 },
               ].map(f => (
                 <div key={f.label}>
                   <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>{f.label}</label>

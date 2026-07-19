@@ -57,7 +57,7 @@ export function DashboardClient({
         {pending.length === 0 ? (
           <div className="rounded-2xl border-2 border-dashed p-8 text-center"
             style={{ borderColor: C.line }}>
-            <p className="text-sm" style={{ color: C.muted }}>🎉 All lesson reports are up to date!</p>
+            <p className="text-sm" style={{ color: C.muted }}>🎉 All lesson reports are up to date.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
