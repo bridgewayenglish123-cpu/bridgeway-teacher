@@ -79,7 +79,7 @@ export function StudentsClient({ students }: { students: StudentRow[] }) {
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[15px]" style={{ color: C.navy }}>
                   {s.en_name ?? s.zh_name}
-                  {s.en_name && <span className="ml-2 text-sm font-normal" style={{ color: C.muted }}>({s.zh_name})</span>}
+                  <span className="ml-2 text-sm font-normal" style={{ color: C.muted }}>({s.zh_name})</span>
                 </div>
                 {a && (
                   <div className="text-[13px] mt-0.5" style={{ color: C.muted }}>

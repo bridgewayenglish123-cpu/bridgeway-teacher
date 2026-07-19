@@ -56,7 +56,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               <div className="w-px self-stretch" style={{ background: C.line }} />
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[15px]" style={{ color: C.navy }}>
-                  {student?.en_name ?? student?.zh_name ?? '—'}
+                  {student?.en_name ? `${student.en_name} (${student.zh_name})` : student?.zh_name ?? '—'}
                 </div>
                 {analysis?.headline && (
                   <div className="text-[13px] mt-0.5 line-clamp-1" style={{ color: C.muted }}>

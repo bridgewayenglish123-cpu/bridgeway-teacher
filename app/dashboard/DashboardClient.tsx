@@ -1,16 +1,3 @@
-
-function translateCourseLabel(label: string | null | undefined): string {
-  if (!label) return '—'
-  return label
-    .replace('其他老師', 'Other Teacher')
-    .replace('Hanne', 'Hanne')
-    .replace('完整課', 'Full')
-    .replace('短課', 'Short')
-    .replace('試聽', 'Trial')
-    .replace('分', ' min')
-    .replace('堂', ' lessons')
-}
-
 'use client'
 import { useState } from 'react'
 import { C } from '@/lib/constants'
@@ -94,7 +81,7 @@ export function DashboardClient({
                       {s?.en_name && <span className="ml-1 text-sm font-normal" style={{ color: C.muted }}>({s.en_name})</span>}
                     </div>
                     <div className="text-[13px] mt-0.5" style={{ color: C.muted }}>
-                      {translateCourseLabel(a?.course_label)} · {fmtTime(l.time)} · {l.duration ?? '?'} min
+                      {fmtTime(l.time)} · {l.duration ?? '?'} min
                     </div>
                   </div>
                   <button onClick={() => setUploadLesson(l)}
