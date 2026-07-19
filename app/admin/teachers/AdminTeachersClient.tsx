@@ -14,7 +14,18 @@ type Teacher = {
 }
 
 export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'active' | 'no-portal'>('all')
   const [selected, setSelected] = useState<Teacher | null>(null)
+
+  const filtered = teachers.filter(t => {
+    const q = search.toLowerCase()
+    const matchSearch = !q || t.teacher_name.toLowerCase().includes(q) || t.email?.toLowerCase().includes(q)
+    const matchFilter = filter === 'all' ? true :
+      filter === 'active' ? t.active_status === 'Active' :
+      !t.auth_user_id
+    return matchSearch && matchFilter
+  })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
@@ -77,10 +88,29 @@ export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
 
   return (
     <main className="mx-auto max-w-[900px] px-4 py-6 sm:px-8 sm:py-8">
-      <h1 className="font-serif text-[28px] font-medium mb-6" style={{ color: C.navy }}>Teachers</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="font-serif text-[28px] font-medium" style={{ color: C.navy }}>Teachers</h1>
+        <span className="text-sm" style={{ color: C.muted }}>{filtered.length} teachers</span>
+      </div>
+
+      <div className="flex gap-3 mb-5 flex-wrap">
+        <input type="text" placeholder="Search by name or email..."
+          value={search} onChange={e => setSearch(e.target.value)}
+          className="rounded-xl border px-4 py-2 text-sm outline-none flex-1 min-w-[180px]"
+          style={{ borderColor: C.line, color: C.navy }} />
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: '#EAF0F6' }}>
+          {(['all', 'active', 'no-portal'] as const).map(v => (
+            <button key={v} onClick={() => setFilter(v)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium transition"
+              style={{ background: filter === v ? C.navy : 'transparent', color: filter === v ? '#fff' : C.muted }}>
+              {v === 'all' ? `All (${teachers.length})` : v === 'active' ? 'Active' : 'No Portal'}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex flex-col gap-3">
-        {teachers.map(t => (
+        {filtered.map(t => (
           <div key={t.id} className="rounded-2xl bg-white p-4 sm:p-5 shadow-sm flex items-center gap-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
               style={{ background: t.active_status === 'Active' ? C.navy : C.muted }}>
