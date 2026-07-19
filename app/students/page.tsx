@@ -27,7 +27,7 @@ export default async function StudentsPage() {
     .eq('teacher_id', teacher.id)
     .eq('active_status', 'Active')
 
-  const accountIds = [...new Set((rules ?? []).map(r => r.account_id))]
+  const accountIds = Array.from(new Set((rules ?? []).map(r => r.account_id)))
 
   if (accountIds.length === 0) {
     return (
