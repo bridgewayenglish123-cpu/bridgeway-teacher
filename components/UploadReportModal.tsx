@@ -95,16 +95,6 @@ export function UploadReportModal({
     } catch {}
   };
 
-
-  const generateOG = async (lid: string) => {
-    try {
-      await Promise.all([
-        fetch("/api/generate-og", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lessonId: lid, template: "lesson" }) }),
-        fetch("/api/generate-og", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lessonId: lid, template: "milestone" }) }),
-      ]);
-    } catch {}
-  };
-
   // Step 2: 確認詞彙後生成報告
   const handleGenerate = async () => {
     setErrorMsg(null);
