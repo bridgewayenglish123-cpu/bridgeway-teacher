@@ -61,7 +61,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
 
   return (
     <main className="mx-auto max-w-[860px] px-4 py-6 sm:px-8 sm:py-8 pb-24 sm:pb-8"
-      style={{ background: C.bg, minHeight: '100dvh' }}>
+      style={{ background: '#F7F4EE', minHeight: '100dvh' }}>
 
       {/* Header */}
       <div className="mb-5">

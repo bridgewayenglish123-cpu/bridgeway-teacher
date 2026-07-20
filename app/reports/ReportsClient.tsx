@@ -156,7 +156,7 @@ export function ReportsClient({ reports }: { reports: Report[] }) {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {report.vocabulary.map((v, i) => (
-                  <div key={i} className="rounded-xl px-3 py-2" style={{ background: '#F5F7FA' }}>
+                  <div key={i} className="rounded-xl px-3 py-2" style={{ background: '#F7F4EE' }}>
                     <div className="font-semibold text-[13px]" style={{ color: C.navy }}>{v.word}</div>
                     {v.definition_en && <div className="text-[11px] mt-0.5" style={{ color: C.muted }}>{v.definition_en}</div>}
                   </div>
