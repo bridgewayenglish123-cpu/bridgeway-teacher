@@ -5,6 +5,7 @@ import { C } from '@/lib/constants'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: '⊟' },
+  { href: '/lessons', label: 'Lessons', icon: '◈' },
   { href: '/students', label: 'Students', icon: '◉' },
   { href: '/reports', label: 'Reports', icon: '◫' },
 ]
