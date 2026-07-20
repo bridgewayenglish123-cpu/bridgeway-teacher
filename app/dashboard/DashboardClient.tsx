@@ -115,7 +115,7 @@ export function DashboardClient({
           <div className="flex flex-col gap-3">
             {todayLessons.map(l => (
               <div key={l.id} className="flex items-center gap-3 rounded-2xl p-4 sm:p-5"
-                style={{ background: '#EAF4FF', border: '1px solid #B3D4F0' }}>
+                style={{ background: '#EDE9E0', border: '1px solid rgba(26,34,54,0.1)' }}>
                 <DateBadge date={l.date} />
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[15px]" style={{ color: C.navy }}>

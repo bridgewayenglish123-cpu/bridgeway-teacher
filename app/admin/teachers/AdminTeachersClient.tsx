@@ -98,7 +98,7 @@ export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
           value={search} onChange={e => setSearch(e.target.value)}
           className="rounded-xl border px-4 py-2 text-sm outline-none flex-1 min-w-[180px]"
           style={{ borderColor: C.line, color: C.navy }} />
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: '#EAF0F6' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: '#EDE9E0' }}>
           {(['all', 'active', 'no-portal'] as const).map(v => (
             <button key={v} onClick={() => setFilter(v)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition"
@@ -137,7 +137,7 @@ export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
               )}
               <button onClick={() => openModal(t)}
                 className="text-xs px-3 py-1.5 rounded-lg font-medium"
-                style={{ background: '#EAF0F6', color: C.navy }}>
+                style={{ background: '#EDE9E0', color: C.navy }}>
                 {t.auth_user_id ? 'Manage' : 'Set Up'}
               </button>
             </div>

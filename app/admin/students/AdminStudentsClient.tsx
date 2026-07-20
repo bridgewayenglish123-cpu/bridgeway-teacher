@@ -46,7 +46,7 @@ export function AdminStudentsClient({ students }: { students: Student[] }) {
           value={search} onChange={e => setSearch(e.target.value)}
           className="rounded-xl border px-4 py-2 text-sm outline-none flex-1 min-w-[180px]"
           style={{ borderColor: C.line, color: C.navy }} />
-        <div className="flex gap-1 rounded-xl p-1" style={{ background: '#EAF0F6' }}>
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: '#EDE9E0' }}>
           {(['Active', 'all'] as const).map(v => (
             <button key={v} onClick={() => setFilter(v)}
               className="px-4 py-1.5 rounded-lg text-sm font-medium transition"

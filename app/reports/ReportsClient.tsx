@@ -199,7 +199,7 @@ export function ReportsClient({ reports }: { reports: Report[] }) {
                 <button key={s.name} onClick={() => selectStudent(s.name)}
                   className="w-full text-left px-4 py-3 transition-colors"
                   style={{
-                    background: active ? '#EAF0F6' : 'transparent',
+                    background: active ? '#EDE9E0' : 'transparent',
                     borderLeft: active ? `3px solid ${C.navy}` : '3px solid transparent',
                   }}>
                   <div className="font-medium text-sm" style={{ color: C.navy }}>{s.name}</div>
@@ -237,7 +237,7 @@ export function ReportsClient({ reports }: { reports: Report[] }) {
                 <button key={r.id} onClick={() => selectReport(r)}
                   className="w-full text-left px-4 py-3 border-b transition-colors"
                   style={{
-                    background: active ? '#EAF0F6' : 'transparent',
+                    background: active ? '#EDE9E0' : 'transparent',
                     borderLeftWidth: 3,
                     borderLeftStyle: 'solid',
                     borderLeftColor: active ? C.gold : 'transparent',
