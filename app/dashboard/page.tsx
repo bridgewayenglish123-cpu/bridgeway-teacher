@@ -47,8 +47,8 @@ export default async function DashboardPage() {
     .eq('teacher_id', teacher.id)
     .eq('status', 'completed')
     .eq('is_active', true)
-    .gte('date', '2026-07-19')
-    .order('date', { ascending: false })
+    .eq('date', todayStr)
+    .order('time', { ascending: true })
     .limit(50)
 
   // 找今日和本週課程
