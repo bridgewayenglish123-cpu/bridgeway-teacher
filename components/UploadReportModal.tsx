@@ -44,6 +44,8 @@ export function UploadReportModal({
   // 詞彙確認
   const [words, setWords] = useState<string[]>([]);
   const [phrases, setPhrases] = useState<string[]>([]);
+  const [removedWords, setRemovedWords] = useState<string[]>([]);
+  const [removedPhrases, setRemovedPhrases] = useState<string[]>([]);
   const [newWord, setNewWord] = useState("");
   const [newPhrase, setNewPhrase] = useState("");
 
@@ -137,8 +139,24 @@ export function UploadReportModal({
     }
   };
 
-  const removeWord = (i: number) => setWords(w => w.filter((_, idx) => idx !== i));
-  const removePhrase = (i: number) => setPhrases(p => p.filter((_, idx) => idx !== i));
+  const removeWord = (i: number) => {
+    const w = words[i];
+    setWords(prev => prev.filter((_, idx) => idx !== i));
+    setRemovedWords(prev => [...prev, w]);
+  };
+  const restoreWord = (w: string) => {
+    setRemovedWords(prev => prev.filter(x => x !== w));
+    setWords(prev => [...prev, w]);
+  };
+  const removePhrase = (i: number) => {
+    const p = phrases[i];
+    setPhrases(prev => prev.filter((_, idx) => idx !== i));
+    setRemovedPhrases(prev => [...prev, p]);
+  };
+  const restorePhrase = (p: string) => {
+    setRemovedPhrases(prev => prev.filter(x => x !== p));
+    setPhrases(prev => [...prev, p]);
+  };
   const addWord = () => {
     const w = newWord.trim();
     if (w && !words.includes(w)) { setWords(prev => [...prev, w]); setNewWord(""); }
@@ -300,7 +318,7 @@ export function UploadReportModal({
                     <button onClick={() => removeWord(i)} className="ml-0.5 hover:text-red-500 transition">×</button>
                   </span>
                 ))}
-                {words.length === 0 && (
+                {words.length === 0 && removedWords.length === 0 && (
                   <span className="text-xs" style={{ color: C.muted }}>AI 未找到符合條件的單字</span>
                 )}
               </div>
@@ -311,6 +329,20 @@ export function UploadReportModal({
                   style={{ borderColor: C.line, color: C.text }} />
                 <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim()}>新增</Btn>
               </div>
+              {removedWords.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-[11px] mb-1.5" style={{ color: C.muted }}>已移除（點擊復原）：</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {removedWords.map((w, i) => (
+                      <button key={i} onClick={() => restoreWord(w)}
+                        className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs line-through transition hover:no-underline"
+                        style={{ background: "#F5F5F5", color: C.muted }}>
+                        {w} <span className="text-[10px] no-underline" style={{ color: C.gold }}>↩</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 片語 */}
@@ -337,6 +369,20 @@ export function UploadReportModal({
                   style={{ borderColor: C.line, color: C.text }} />
                 <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim()}>新增</Btn>
               </div>
+              {removedPhrases.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-[11px] mb-1.5" style={{ color: C.muted }}>已移除（點擊復原）：</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {removedPhrases.map((p, i) => (
+                      <button key={i} onClick={() => restorePhrase(p)}
+                        className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs line-through transition hover:no-underline"
+                        style={{ background: "#F5F5F5", color: C.muted }}>
+                        {p} <span className="text-[10px] no-underline" style={{ color: C.gold }}>↩</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {errorMsg && (
