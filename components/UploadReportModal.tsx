@@ -29,7 +29,7 @@ interface Props {
 type Mode = "vtt" | "manual";
 type Step = "upload" | "vocab" | "done" | "error";
 
-export default function UploadReportModal({
+export function UploadReportModal({
   lessonId, studentName, lessonDate, teacherName,
   existingReportId, onGenerated, onClose,
 }: Props) {
