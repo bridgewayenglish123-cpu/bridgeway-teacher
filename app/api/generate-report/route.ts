@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY!);
 
   try {
-    const { lessonId, vttContent, teacherNote, existingReportId, manualInput } =
+    const { lessonId, vttContent, teacherNote, existingReportId, manualInput, confirmedVocab } =
       await request.json();
 
     if (!lessonId || (!vttContent && !manualInput)) {
@@ -152,7 +152,7 @@ ${transcript}
 - 英文版：全英文，語氣正式但友善，可作為學習材料
 - 禁止使用 emoji
 - 禁止空泛稱讚（如「你表現很好」），只說具體觀察
-- 單字和片語只抓「學生明顯不熟悉、或老師特別解釋過」的詞彙，最多 8 個單字、6 個片語
+- 單字和片語：${confirmedVocab ? `老師已確認的詞彙清單如下，請直接使用，不要自行增減。單字：${(confirmedVocab.words || []).join(", ") || "（無）"}。片語：${(confirmedVocab.phrases || []).join(", ") || "（無）"}` : "只抓老師特別解釋過、學生問過、或課堂重點強調的詞彙，不設數量上限"}
 - 錯誤模式要列出「所有」發生的例句，不只是代表性的一句
 - errors 的 pattern 必須同時提供 pattern_zh（中文名稱）和 pattern_en（英文名稱）
 - examples 欄位是陣列，列出課堂中所有出現的錯誤例句（只能是英文），每個錯誤都要有對應的 correction
