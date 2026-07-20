@@ -139,7 +139,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
           lessonDate={modal.lesson.date}
           teacherName={teacherName}
           onGenerated={() => {
-            setUploadedIds(prev => new Set([...prev, modal.lesson.id]))
+            setUploadedIds(prev => { const next = new Set(Array.from(prev)); next.add(modal!.lesson.id); return next; })
             setModal(null)
           }}
           onClose={() => setModal(null)}

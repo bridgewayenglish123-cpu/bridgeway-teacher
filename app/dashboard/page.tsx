@@ -36,6 +36,10 @@ export default async function DashboardPage() {
   }
 
   // 找所有這位老師上過的已完課課程（含代課）
+  const today = new Date()
+  const tw = new Date(today.getTime() + 8 * 60 * 60 * 1000)
+  const todayStr = tw.toISOString().slice(0, 10)
+
   const { data: pendingLessons } = await admin
     .from('lessons')
     .select(`
@@ -52,9 +56,6 @@ export default async function DashboardPage() {
     .limit(50)
 
   // 找今日和本週課程
-  const today = new Date()
-  const tw = new Date(today.getTime() + 8 * 60 * 60 * 1000)
-  const todayStr = tw.toISOString().slice(0, 10)
   const { data: upcomingLessons } = await admin
     .from('lessons')
     .select(`

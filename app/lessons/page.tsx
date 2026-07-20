@@ -57,7 +57,7 @@ export default async function LessonsPage() {
 
   return (
     <>
-      <Nav name={teacher.teacher_name} />
+      <Nav teacherName={teacher.teacher_name} />
       <LessonsClient lessons={allLessons} teacherName={teacher.teacher_name} isAdmin={teacher.role === 'admin'} />
     </>
   )
