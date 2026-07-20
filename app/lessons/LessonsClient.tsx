@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { C } from '@/lib/constants'
 import { UploadReportModal } from '@/components/UploadReportModal'
 
@@ -15,6 +15,8 @@ type Lesson = {
   hasReport: boolean
 }
 
+const PAGE_SIZE = 20
+
 export function LessonsClient({ lessons, teacherName, isAdmin }: {
   lessons: Lesson[]
   teacherName: string
@@ -23,6 +25,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'uploaded' | 'pending'>('all')
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
+  const [page, setPage] = useState(1)
   const [modal, setModal] = useState<{ lesson: Lesson } | null>(null)
   const [uploadedIds, setUploadedIds] = useState<Set<string>>(
     new Set(lessons.filter(l => l.hasReport).map(l => l.id))
@@ -50,6 +53,12 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
     return list
   }, [lessons, search, filter, sort, uploadedIds])
 
+  // 搜尋/篩選/排序改變時重設頁碼
+  useEffect(() => { setPage(1) }, [search, filter, sort])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
   return (
     <main className="mx-auto max-w-[860px] px-4 py-6 sm:px-8 sm:py-8 pb-24 sm:pb-8"
       style={{ background: C.bg, minHeight: '100dvh' }}>
@@ -69,7 +78,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
         </div>
       </div>
 
-      {/* 統計卡 — 手機 2 格，桌機 3 格 */}
+      {/* 統計卡 */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
         {[
           { label: '全部', value: lessons.length, color: C.navy },
@@ -93,19 +102,16 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
           boxShadow: '0 1px 4px rgba(26,34,54,0.04)' }} />
 
       {/* 篩選 + 排序 */}
-      <div className="flex gap-2 flex-wrap mb-5">
+      <div className="flex gap-2 flex-wrap mb-4">
         <div className="flex gap-1 rounded-xl p-1 flex-1 sm:flex-none" style={{ background: '#EDE9E0' }}>
           {([
-            { v: 'all', l: `全部` },
-            { v: 'pending', l: `待上傳` },
-            { v: 'uploaded', l: `已上傳` },
+            { v: 'all', l: '全部' },
+            { v: 'pending', l: '待上傳' },
+            { v: 'uploaded', l: '已上傳' },
           ] as const).map(f => (
             <button key={f.v} onClick={() => setFilter(f.v)}
               className="flex-1 sm:flex-none rounded-lg px-3 py-1.5 text-[12px] font-medium transition"
-              style={{
-                background: filter === f.v ? C.navy : 'transparent',
-                color: filter === f.v ? '#fff' : C.muted,
-              }}>
+              style={{ background: filter === f.v ? C.navy : 'transparent', color: filter === f.v ? '#fff' : C.muted }}>
               {f.l}
             </button>
           ))}
@@ -114,10 +120,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
           {([{ v: 'newest', l: '最新' }, { v: 'oldest', l: '最舊' }] as const).map(s => (
             <button key={s.v} onClick={() => setSort(s.v)}
               className="rounded-lg px-3 py-1.5 text-[12px] font-medium transition"
-              style={{
-                background: sort === s.v ? C.navy : 'transparent',
-                color: sort === s.v ? '#fff' : C.muted,
-              }}>
+              style={{ background: sort === s.v ? C.navy : 'transparent', color: sort === s.v ? '#fff' : C.muted }}>
               {s.l}
             </button>
           ))}
@@ -126,52 +129,36 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
 
       {/* 結果數 */}
       {(search || filter !== 'all') && (
-        <div className="text-[12px] mb-3" style={{ color: C.muted }}>
-          找到 {filtered.length} 筆
-        </div>
+        <div className="text-[12px] mb-3" style={{ color: C.muted }}>找到 {filtered.length} 筆</div>
       )}
 
       {/* 課程列表 */}
-      <div className="flex flex-col gap-2">
-        {filtered.map(l => {
+      <div className="flex flex-col gap-2 mb-6">
+        {paginated.map(l => {
           const uploaded = uploadedIds.has(l.id)
           const name = l.studentEn || l.studentZh
-          const month = l.date.slice(5, 7)
-          const day = l.date.slice(8)
-
           return (
             <div key={l.id}
               className="rounded-2xl bg-white p-4 shadow-sm flex items-center gap-3 sm:gap-4"
-              style={{ borderLeft: uploaded ? `3px solid ${C.green}` : `3px solid ${C.line}` }}>
-
-              {/* 日期 */}
+              style={{ borderLeft: `3px solid ${uploaded ? C.green : C.line}` }}>
               <div className="flex-shrink-0 text-center w-9 sm:w-11">
-                <div className="text-[10px] font-medium" style={{ color: C.muted }}>{month}月</div>
-                <div className="font-serif text-[22px] sm:text-[26px] font-medium leading-none mt-0.5"
-                  style={{ color: C.navy }}>{day}</div>
-              </div>
-
-              <div className="w-px self-stretch" style={{ background: C.line }} />
-
-              {/* 內容 */}
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-[14px] sm:text-[15px] truncate" style={{ color: C.navy }}>
-                  {name}
+                <div className="text-[10px] font-medium" style={{ color: C.muted }}>{l.date.slice(5, 7)}月</div>
+                <div className="font-serif text-[22px] sm:text-[26px] font-medium leading-none mt-0.5" style={{ color: C.navy }}>
+                  {l.date.slice(8)}
                 </div>
-                <div className="text-[11px] sm:text-[12px] mt-0.5 flex items-center gap-1.5 flex-wrap"
-                  style={{ color: C.muted }}>
+              </div>
+              <div className="w-px self-stretch" style={{ background: C.line }} />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-[14px] sm:text-[15px] truncate" style={{ color: C.navy }}>{name}</div>
+                <div className="text-[11px] sm:text-[12px] mt-0.5 flex items-center gap-1.5" style={{ color: C.muted }}>
                   {l.time && <span>{l.time.slice(0, 5)}</span>}
                   {l.duration && <><span>·</span><span>{l.duration} 分鐘</span></>}
                 </div>
               </div>
-
-              {/* 狀態按鈕 */}
               <div className="flex-shrink-0">
                 {uploaded ? (
                   <span className="text-[11px] sm:text-[12px] px-2.5 py-1.5 rounded-full font-medium"
-                    style={{ background: '#E8F5E9', color: '#2E7D32' }}>
-                    ✓ 已上傳
-                  </span>
+                    style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ 已上傳</span>
                 ) : (
                   <button onClick={() => setModal({ lesson: l })}
                     className="text-[11px] sm:text-[12px] px-2.5 py-1.5 rounded-full font-medium transition active:scale-95"
@@ -184,15 +171,62 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
           )
         })}
 
-        {filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed py-12 text-center"
-            style={{ borderColor: C.line }}>
+        {paginated.length === 0 && (
+          <div className="rounded-2xl border border-dashed py-12 text-center" style={{ borderColor: C.line }}>
             <p className="text-[14px]" style={{ color: C.muted }}>
               {search || filter !== 'all' ? '找不到符合的課程' : '還沒有完課記錄'}
             </p>
           </div>
         )}
       </div>
+
+      {/* 分頁 */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo(0, 0) }}
+            disabled={page === 1}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition disabled:opacity-40"
+            style={{ background: '#fff', color: C.navy, border: `1px solid ${C.line}` }}>
+            ← 上一頁
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce<(number | '...')[]>((acc, p, i, arr) => {
+                if (i > 0 && p - (arr[i-1] as number) > 1) acc.push('...')
+                acc.push(p)
+                return acc
+              }, [])
+              .map((p, i) => p === '...'
+                ? <span key={`e${i}`} className="text-[13px]" style={{ color: C.muted }}>…</span>
+                : <button key={p} onClick={() => { setPage(p as number); window.scrollTo(0, 0) }}
+                    className="w-8 h-8 rounded-lg text-[13px] font-medium transition"
+                    style={{
+                      background: page === p ? C.navy : '#fff',
+                      color: page === p ? '#fff' : C.navy,
+                      border: `1px solid ${page === p ? C.navy : C.line}`,
+                    }}>{p}</button>
+              )}
+          </div>
+
+          <button
+            onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo(0, 0) }}
+            disabled={page === totalPages}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition disabled:opacity-40"
+            style={{ background: '#fff', color: C.navy, border: `1px solid ${C.line}` }}>
+            下一頁 →
+          </button>
+        </div>
+      )}
+
+      {/* 頁碼資訊 */}
+      {totalPages > 1 && (
+        <div className="text-center text-[12px] mt-3" style={{ color: C.muted }}>
+          第 {page} 頁，共 {totalPages} 頁（每頁 {PAGE_SIZE} 筆）
+        </div>
+      )}
 
       {/* Upload Modal */}
       {modal && (
