@@ -6,6 +6,7 @@ type Report = {
   id: string
   created_at: string
   milestone: string | null
+  teacher_note?: string | null
   analysis_zh: { headline: string; body: string } | null
   analysis_en: { headline: string; body: string } | null
   vocabulary: { word: string; definition_en?: string; definition_zh?: string }[] | null

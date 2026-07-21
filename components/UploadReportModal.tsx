@@ -48,6 +48,30 @@ export function UploadReportModal({
   const [removedPhrases, setRemovedPhrases] = useState<string[]>([]);
   const [newWord, setNewWord] = useState("");
   const [newPhrase, setNewPhrase] = useState("");
+  const [wordWarning, setWordWarning] = useState("");
+  const [phraseWarning, setPhraseWarning] = useState("");
+
+  const checkSpelling = async (word: string, setter: (s: string) => void) => {
+    const w = word.trim().toLowerCase()
+    if (!w) return
+    try {
+      // Datamuse: sp= 找拼寫相近的字，如果第一個結果和輸入完全一樣，表示拼寫正確
+      const res = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(w)}&max=3`)
+      const data: { word: string; score: number }[] = await res.json()
+      if (!data.length) {
+        setter(`"${word}" doesn't look like a valid English word.`)
+      } else if (data[0].word !== w) {
+        // 拼寫不完全相符，提供建議
+        const suggestions = data.slice(0, 3).map(d => d.word).join(', ')
+        setter(`Did you mean: ${suggestions}?`)
+      } else {
+        setter('')
+      }
+    } catch { setter('') }
+  }
+
+  const checkWord = (w: string) => checkSpelling(w, setWordWarning)
+  const checkPhrase = (p: string) => checkSpelling(p.split(' ')[0], setPhraseWarning)
 
   // Manual Input
   const [manualPerformance, setManualPerformance] = useState("");
@@ -333,10 +357,16 @@ export function UploadReportModal({
                 )}
               </div>
               <div className="flex gap-2">
-                <input type="text" value={newWord} onChange={e => setNewWord(e.target.value)}
+                <div className="flex-1">
+                <input type="text" value={newWord} onChange={e => { setNewWord(e.target.value); setWordWarning(""); }}
                   onKeyDown={e => e.key === "Enter" && addWord()}
-                  placeholder="Add a word..." className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
-                  style={{ borderColor: C.line, color: C.text }} />
+                  onBlur={() => checkWord(newWord)}
+                  placeholder="Add a word..." className="w-full rounded-lg border px-3 py-1.5 text-sm"
+                  style={{ borderColor: wordWarning ? '#D97706' : C.line, color: C.text }} />
+                {wordWarning && (
+                  <div className="text-[11px] mt-1" style={{ color: '#D97706' }}>⚠ {wordWarning}</div>
+                )}
+              </div>
                 <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim()}>Add</Btn>
               </div>
               {removedWords.length > 0 && (
@@ -373,10 +403,16 @@ export function UploadReportModal({
                 )}
               </div>
               <div className="flex gap-2">
-                <input type="text" value={newPhrase} onChange={e => setNewPhrase(e.target.value)}
+                <div className="flex-1">
+                <input type="text" value={newPhrase} onChange={e => { setNewPhrase(e.target.value); setPhraseWarning(""); }}
                   onKeyDown={e => e.key === "Enter" && addPhrase()}
-                  placeholder="Add a phrase..." className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
-                  style={{ borderColor: C.line, color: C.text }} />
+                  onBlur={() => checkPhrase(newPhrase)}
+                  placeholder="Add a phrase..." className="w-full rounded-lg border px-3 py-1.5 text-sm"
+                  style={{ borderColor: phraseWarning ? '#D97706' : C.line, color: C.text }} />
+                {phraseWarning && (
+                  <div className="text-[11px] mt-1" style={{ color: '#D97706' }}>⚠ {phraseWarning}</div>
+                )}
+              </div>
                 <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim()}>Add</Btn>
               </div>
               {removedPhrases.length > 0 && (
