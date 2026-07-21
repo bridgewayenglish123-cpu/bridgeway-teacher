@@ -100,14 +100,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
 
           {/* 操作按鈕 */}
           <div className="flex items-center gap-2 flex-wrap">
-            {lessonId && (
-              <a href={`https://app.bridgewayenglish.net/report/${lessonId}`}
-                target="_blank" rel="noopener noreferrer"
-                className="text-[12px] px-3 py-1.5 rounded-xl font-medium transition hover:opacity-80"
-                style={{ background: '#F0EDE6', color: C.navy }}>
-                View in Classroom ↗
-              </a>
-            )}
+
             <button
               onClick={() => {
                 if (!lesson) return
