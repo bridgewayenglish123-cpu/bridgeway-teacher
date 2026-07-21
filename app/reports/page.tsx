@@ -45,7 +45,7 @@ export default async function ReportsPage() {
   return (
     <>
       <Nav teacherName={teacher.teacher_name} />
-      <ReportsClient reports={(reports ?? []) as any[]} />
+      <ReportsClient reports={(reports ?? []) as any[]} teacherName={teacher.teacher_name} />
     </>
   )
 }

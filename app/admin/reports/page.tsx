@@ -30,7 +30,7 @@ export default async function AdminReportsPage() {
   return (
     <>
       <AdminNav adminName={me.teacher_name} />
-      <ReportsClient reports={(reports ?? []) as any[]} />
+      <ReportsClient reports={(reports ?? []) as any[]} teacherName={me.teacher_name} />
     </>
   )
 }
