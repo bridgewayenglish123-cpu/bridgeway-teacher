@@ -109,6 +109,7 @@ export async function POST(request: Request) {
 
     const studentName = student.en_name ?? student.zh_name;
     const studentLevel = (student as any).level ?? 'Elementary';
+    const learnerType = (student as any).learner_type ?? 'Adult';
     // untyped admin client 對 embed 會解析為 never，存取時轉 any
     const teacherRel = lesson.teacher as any;
     const teacherName =
@@ -136,12 +137,29 @@ export async function POST(request: Request) {
 
 學生姓名：${studentName}
 學生程度：${studentLevel}（Beginner / Elementary / Intermediate / Upper-Intermediate）
-請根據學生程度調整例句和說明的難度：
+學生類型：${learnerType}（Young Learner / Junior / Adult）
+
+【語氣風格】統一採用：鼓勵 + 幽默混合。像一個真心關心學生的老師，偶爾說個俏皮的話，但永遠讓學生感覺被支持。
+依學生類型調整：
+- Young Learner：誇張可愛的鼓勵，用最簡單的詞，像在跟小朋友說話
+- Junior：酷一點、有個性，不過度甜膩，適當挑戰
+- Adult：專業但溫暖，點到為止不囉嗦
+
+【例句難度】依程度調整：
 - Beginner：超短句、常見日常詞彙、句型簡單
 - Elementary：短句、基本詞彙、避免複雜句型
 - Intermediate：自然的中等長度句子、可以有從句
 - Upper-Intermediate：自然流暢、可用較豐富的詞彙和句型
 同時請從逐字稿判斷學生實際表現，若實際程度與設定不符，以逐字稿為準微調例句難度。
+
+【錯誤呈現】不要直接給答案，用問句方式呈現：
+例：「你今天說了 'I go to school yesterday'——你知道哪裡怪怪的嗎？」
+然後在 correction 欄位給正確版本（前端會做展開效果，讓學生先想再看）。
+
+【hidden_gem】依學生類型：
+- Young Learner：一定要有，超具體，讓小朋友感覺被老師看見
+- Junior：要有，用比較酷的語氣描述
+- Adult：有真正值得說的再放，沒有就 null
 老師姓名：${teacherName}
 上課日期：${lesson.date}
 學習目標：${student.learning_goal ?? "未設定"}
@@ -211,6 +229,7 @@ ${transcript}
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
   "hidden_gem": "A specific moment from today's lesson that the student might not have noticed — something genuinely impressive or meaningful. Write in warm, story-like Chinese (2-3 sentences). IMPORTANT: Only include this if there is a truly remarkable moment worth highlighting. If nothing stands out, return null.",
+  "next_challenge": "A specific, personal challenge for the student to try before next lesson. NOT course content — a language challenge targeting their specific weakness. Write in Chinese, 1-2 sentences, with a hint of excitement. Example: '下次試試看：當你想說「因為」的時候，你能不能不用 because？看你能想出幾種說法。' Adjust difficulty and tone based on learner_type.",
   "analysis_zh": {
     "headline": "Annie，你這堂課真的有進步。",
     "body": "具體、有溫度的中文分析，2-4句。"
