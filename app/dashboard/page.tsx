@@ -28,8 +28,8 @@ export default async function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
-          <p className="text-lg mb-2" style={{ color: '#1A3A5C' }}>找不到老師資料</p>
-          <p className="text-sm" style={{ color: '#6B7B8E' }}>請聯絡 Bridgeway 管理員。</p>
+          <p className="text-lg mb-2" style={{ color: '#1A3A5C' }}>Teacher account not found</p>
+          <p className="text-sm" style={{ color: '#6B7B8E' }}>Please contact your Bridgeway administrator.</p>
         </div>
       </div>
     )

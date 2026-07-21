@@ -51,13 +51,13 @@ export function Nav({ teacherName }: { teacherName: string }) {
               })}
             </div>
 
-            {/* 老師名 + 登出 */}
+            {/* 老師名 + Sign Out */}
             <div className="flex items-center gap-3">
               <span className="text-[13px] font-medium" style={{ color: C.navy }}>{teacherName}</span>
               <button onClick={handleSignOut}
                 className="text-[12px] px-3 py-1.5 rounded-xl transition hover:opacity-80"
                 style={{ background: 'rgba(26,34,54,0.06)', color: C.muted }}>
-                登出
+                Sign Out
               </button>
             </div>
           </div>
@@ -75,7 +75,7 @@ export function Nav({ teacherName }: { teacherName: string }) {
           <button onClick={handleSignOut}
             className="text-[11px] px-2.5 py-1.5 rounded-xl"
             style={{ background: 'rgba(26,34,54,0.06)', color: C.muted }}>
-            登出
+            Sign Out
           </button>
         </div>
       </div>

@@ -52,7 +52,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>密碼</label>
+            <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>Password</label>
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
               className="w-full rounded-lg border px-3 py-2.5 text-sm outline-none focus:border-blue-400"
               style={{ borderColor: C.line, color: C.text }}
@@ -69,7 +69,7 @@ export default function LoginPage() {
           <button onClick={handleLogin} disabled={loading || !email || !password}
             className="w-full rounded-lg py-2.5 text-sm font-semibold transition disabled:opacity-50"
             style={{ background: C.navy, color: '#fff' }}>
-            {loading ? 'Sign In中…' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </div>
       </div>

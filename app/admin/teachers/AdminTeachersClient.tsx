@@ -72,7 +72,7 @@ export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
 
   const handleDelete = () => {
     if (!selected?.auth_user_id) return
-    if (!confirm(`確定刪除 ${selected.teacher_name} 的 Portal 帳號？`)) return
+    if (!confirm(`Delete portal account for ${selected.teacher_name}?`)) return
     startTransition(async () => {
       setStatus('loading')
       const res = await fetch('/api/teacher-account', {
@@ -162,7 +162,7 @@ export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
                 </div>
                 <button onClick={() => setSelected(null)}
                   className="w-full py-2 rounded-lg text-sm font-medium text-white"
-                  style={{ background: C.navy }}>關閉</button>
+                  style={{ background: C.navy }}>Close</button>
               </>
             ) : (
               <>
