@@ -52,6 +52,8 @@ export function UploadReportModal({
 
   // ── VTT mode ──
   const [file, setFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [transcriptMins, setTranscriptMins] = useState<number | null>(null);
   const [vttContent, setVttContent] = useState("");
   const [candidateWords, setCandidateWords] = useState<string[]>([]);
   const [candidatePhrases, setCandidatePhrases] = useState<string[]>([]);
@@ -109,6 +111,23 @@ export function UploadReportModal({
     setIsLoading(true);
     try {
       const text = await file.text();
+
+      // 驗證 VTT 格式
+      if (!text.trim().startsWith("WEBVTT")) {
+        setErrorMsg("Invalid file format. Please upload a valid .vtt file.");
+        setIsLoading(false);
+        return;
+      }
+
+      // 計算逐字稿時長
+      const timeMatches = text.match(/\d{2}:\d{2}:\d{2}\.\d{3}/g);
+      if (timeMatches && timeMatches.length > 0) {
+        const lastTime = timeMatches[timeMatches.length - 1];
+        const [h, m, s] = lastTime.split(":").map(parseFloat);
+        const totalMins = Math.round(h * 60 + m + s / 60);
+        setTranscriptMins(totalMins);
+      }
+
       setVttContent(text);
       const res = await fetch("/api/extract-vocab", {
         method: "POST",
@@ -327,7 +346,13 @@ export function UploadReportModal({
             <div className="space-y-3">
               <div>
                 <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: C.muted }}>VTT Transcript *</label>
-                <input type="file" accept=".vtt" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm" style={{ color: C.navy }} />
+                <input type="file" accept=".vtt" onChange={e => { const f = e.target.files?.[0] || null; setFile(f); setFileName(f?.name ?? ''); setTranscriptMins(null); }} className="w-full text-sm" style={{ color: C.navy }} />
+                {fileName && (
+                  <div className="mt-1.5 text-[11px] flex items-center gap-1.5" style={{ color: C.muted }}>
+                    <span>📄</span>
+                    <span className="font-medium" style={{ color: C.navy }}>{fileName}</span>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>Teacher Note <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span></label>
@@ -411,12 +436,30 @@ export function UploadReportModal({
           {step === "vocab" && mode === "vtt" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-[13px] font-semibold" style={{ color: C.navy }}>Select vocabulary for the report</div>
+                <div>
+                  <div className="text-[13px] font-semibold" style={{ color: C.navy }}>Select vocabulary for the report</div>
+                  {transcriptMins !== null && (
+                    <div className="text-[11px] mt-0.5" style={{ color: C.muted }}>
+                      📄 {fileName} · {transcriptMins} min transcript
+                    </div>
+                  )}
+                </div>
                 <div className="text-[12px] font-medium px-2.5 py-1 rounded-full"
                   style={{ background: atMax ? "#FEF3C7" : "#F0EDE6", color: atMax ? "#92400E" : C.muted }}>
                   {totalSelected} / {MAX_VOCAB}
                 </div>
               </div>
+
+              {candidateWords.length === 0 && candidatePhrases.length === 0 && (
+                <div className="rounded-xl p-4 text-center space-y-2" style={{ background: "#FEF3C7", border: "1px solid #FDE68A" }}>
+                  <div className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+                    ⚠ No vocabulary found in the transcript.
+                  </div>
+                  <div className="text-[12px]" style={{ color: "#92400E" }}>
+                    The AI could not identify any key vocabulary from this recording. You can add words and phrases manually below, or go back and try a different file.
+                  </div>
+                </div>
+              )}
 
               {candidateWords.length > 0 && (
                 <div>
@@ -679,7 +722,7 @@ export function UploadReportModal({
             <>
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
               <Btn kind="gold" size="sm" onClick={handleExtractVocab} disabled={!file || isLoading}>
-                {isLoading ? "Analyzing..." : "Next: Select Vocabulary →"}
+  {isLoading ? "Analyzing transcript... (~15s)" : "Next: Select Vocabulary →"}
               </Btn>
             </>
           )}
