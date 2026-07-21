@@ -42,9 +42,21 @@ ${transcript}
 
 嚴格回傳以下 JSON 格式，不加任何其他文字：
 {
-  "words": ["word1", "word2", "word3"],
-  "phrases": ["phrase one", "phrase two"]
-}`;
+  "words": [
+    { "word": "camouflage", "reason": "teacher explained" },
+    { "word": "predator", "reason": "student asked" }
+  ],
+  "phrases": [
+    { "phrase": "set off", "reason": "teacher drilled" }
+  ]
+}
+
+reason 只能是以下其中一個：
+- "teacher explained" — 老師主動解釋
+- "student asked" — 學生主動詢問
+- "teacher corrected" — 老師糾正學生錯誤
+- "teacher drilled" — 老師要求練習或造句
+- "repeated emphasis" — 老師重複強調超過2次`;
 
   try {
     const apiRes = await fetch("https://api.anthropic.com/v1/messages", {

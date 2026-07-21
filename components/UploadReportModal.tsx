@@ -57,6 +57,8 @@ export function UploadReportModal({
   const [vttContent, setVttContent] = useState("");
   const [candidateWords, setCandidateWords] = useState<string[]>([]);
   const [candidatePhrases, setCandidatePhrases] = useState<string[]>([]);
+  const [wordReasons, setWordReasons] = useState<Record<string, string>>({});
+  const [phraseReasons, setPhraseReasons] = useState<Record<string, string>>({});
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
   const [selectedPhrases, setSelectedPhrases] = useState<Set<string>>(new Set());
 
@@ -79,6 +81,14 @@ export function UploadReportModal({
   const [suspectWords, setSuspectWords] = useState<string[]>([]);
   const [isValidating, setIsValidating] = useState(false);
 
+
+  const reasonStyle: Record<string, { bg: string; color: string; label: string }> = {
+    "teacher explained": { bg: "#EEF2FF", color: "#3730A3", label: "explained" },
+    "student asked": { bg: "#F0FDF4", color: "#166534", label: "student asked" },
+    "teacher corrected": { bg: "#FEF2F2", color: "#DC2626", label: "corrected" },
+    "teacher drilled": { bg: "#FBF8EF", color: "#92400E", label: "drilled" },
+    "repeated emphasis": { bg: "#F5F0FF", color: "#5A3A7C", label: "emphasized" },
+  };
   const totalSelected = selectedWords.size + selectedPhrases.size + extraWords.length + extraPhrases.length;
   const atMax = totalSelected >= MAX_VOCAB;
 
@@ -137,10 +147,18 @@ export function UploadReportModal({
       const data = await res.json();
       if (data.error) { setErrorMsg(data.error); }
       else {
-        const words = (data.words || data.vocabulary || []).map((v: any) => typeof v === "string" ? v : v.word).filter(Boolean);
-        const phrases = (data.phrases || []).map((p: any) => typeof p === "string" ? p : p.phrase).filter(Boolean);
+        const rawWords = data.words || data.vocabulary || [];
+        const rawPhrases = data.phrases || [];
+        const words = rawWords.map((v: any) => typeof v === "string" ? v : v.word).filter(Boolean);
+        const phrases = rawPhrases.map((p: any) => typeof p === "string" ? p : p.phrase).filter(Boolean);
+        const wReasons: Record<string, string> = {};
+        const pReasons: Record<string, string> = {};
+        rawWords.forEach((v: any) => { if (v.word && v.reason) wReasons[v.word] = v.reason; });
+        rawPhrases.forEach((p: any) => { if (p.phrase && p.reason) pReasons[p.phrase] = p.reason; });
         setCandidateWords(words);
         setCandidatePhrases(phrases);
+        setWordReasons(wReasons);
+        setPhraseReasons(pReasons);
         const initWords = new Set<string>(words.slice(0, Math.min(words.length, MAX_VOCAB)));
         const remaining = MAX_VOCAB - initWords.size;
         const initPhrases = new Set<string>(phrases.slice(0, Math.max(0, remaining)));
@@ -467,12 +485,21 @@ export function UploadReportModal({
                   <div className="flex flex-wrap gap-2">
                     {candidateWords.map(w => {
                       const checked = selectedWords.has(w);
+                      const rs = wordReasons[w] ? reasonStyle[wordReasons[w]] : null;
                       return (
-                        <button key={w} onClick={() => toggleWord(w)} disabled={!checked && atMax}
-                          className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
-                          style={{ background: checked ? C.navy : "#fff", color: checked ? "#fff" : C.navy, borderColor: checked ? C.navy : C.line }}>
-                          {w} {checked ? "✓" : ""}
-                        </button>
+                        <div key={w} className="flex flex-col items-start gap-0.5">
+                          <button onClick={() => toggleWord(w)} disabled={!checked && atMax}
+                            className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
+                            style={{ background: checked ? C.navy : "#fff", color: checked ? "#fff" : C.navy, borderColor: checked ? C.navy : C.line }}>
+                            {w} {checked ? "✓" : ""}
+                          </button>
+                          {rs && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                              style={{ background: rs.bg, color: rs.color }}>
+                              {rs.label}
+                            </span>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
@@ -485,12 +512,21 @@ export function UploadReportModal({
                   <div className="flex flex-wrap gap-2">
                     {candidatePhrases.map(p => {
                       const checked = selectedPhrases.has(p);
+                      const rs = phraseReasons[p] ? reasonStyle[phraseReasons[p]] : null;
                       return (
-                        <button key={p} onClick={() => togglePhrase(p)} disabled={!checked && atMax}
-                          className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
-                          style={{ background: checked ? "#5A3A7C" : "#fff", color: checked ? "#fff" : "#5A3A7C", borderColor: checked ? "#5A3A7C" : C.line }}>
-                          {p} {checked ? "✓" : ""}
-                        </button>
+                        <div key={p} className="flex flex-col items-start gap-0.5">
+                          <button onClick={() => togglePhrase(p)} disabled={!checked && atMax}
+                            className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
+                            style={{ background: checked ? "#5A3A7C" : "#fff", color: checked ? "#fff" : "#5A3A7C", borderColor: checked ? "#5A3A7C" : C.line }}>
+                            {p} {checked ? "✓" : ""}
+                          </button>
+                          {rs && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                              style={{ background: rs.bg, color: rs.color }}>
+                              {rs.label}
+                            </span>
+                          )}
+                        </div>
                       );
                     })}
                   </div>
