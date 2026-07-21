@@ -112,7 +112,7 @@ export function UploadReportModal({
       const data = await res.json();
       if (data.error) { setErrorMsg(data.error); }
       else {
-        const words = (data.vocabulary || []).map((v: any) => typeof v === "string" ? v : v.word).filter(Boolean);
+        const words = (data.words || data.vocabulary || []).map((v: any) => typeof v === "string" ? v : v.word).filter(Boolean);
         const phrases = (data.phrases || []).map((p: any) => typeof p === "string" ? p : p.phrase).filter(Boolean);
         setCandidateWords(words);
         setCandidatePhrases(phrases);
@@ -217,6 +217,10 @@ export function UploadReportModal({
   };
 
   // Manual mode 直接生成
+  const handleManualConfirm = () => {
+    setStep("confirm");
+  };
+
   const handleManualGenerate = async () => {
     setStep("generating");
     setIsLoading(true);
@@ -528,7 +532,12 @@ export function UploadReportModal({
                 </div>
               )}
 
-              {suspectWords.length === 0 && (
+              {mode === "manual" && (
+                <div className="rounded-xl p-3 text-[13px]" style={{ background: "#F0FDF4", color: "#166534" }}>
+                  ✓ Manual input ready. Click Generate to create the report.
+                </div>
+              )}
+              {mode === "vtt" && suspectWords.length === 0 && (
                 <div className="rounded-xl p-3 text-[13px]" style={{ background: "#F0FDF4", color: "#166534" }}>
                   ✓ All vocabulary looks good. Ready to generate.
                 </div>
@@ -577,8 +586,8 @@ export function UploadReportModal({
           {step === "upload" && mode === "manual" && (
             <>
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
-              <Btn kind="gold" size="sm" onClick={handleManualGenerate} disabled={!manualPerformance.trim() || isLoading}>
-                {isLoading ? "Generating..." : "Generate Report"}
+              <Btn kind="gold" size="sm" onClick={handleManualConfirm} disabled={!manualPerformance.trim() || isLoading}>
+                Review & Confirm →
               </Btn>
             </>
           )}
@@ -597,8 +606,8 @@ export function UploadReportModal({
           )}
           {step === "confirm" && (
             <>
-              <Btn kind="ghost" size="sm" onClick={() => setStep("vocab")}>← Back</Btn>
-              <Btn kind="gold" size="sm" onClick={handleGenerate}>
+              <Btn kind="ghost" size="sm" onClick={() => mode === "manual" ? setStep("upload") : setStep("vocab")}>← Back</Btn>
+              <Btn kind="gold" size="sm" onClick={mode === "manual" ? handleManualGenerate : handleGenerate}>
                 {suspectWords.length > 0 ? "Generate Anyway" : "Generate Report"}
               </Btn>
             </>
