@@ -148,6 +148,7 @@ export async function POST(request: Request) {
 【例句難度】依程度調整：
 - Beginner：超短句、常見日常詞彙、句型簡單
 - Elementary：短句、基本詞彙、避免複雜句型
+- Pre-Intermediate：稍長的句子、常見詞彙為主、可以有簡單連接詞
 - Intermediate：自然的中等長度句子、可以有從句
 - Upper-Intermediate：自然流暢、可用較豐富的詞彙和句型
 同時請從逐字稿判斷學生實際表現，若實際程度與設定不符，以逐字稿為準微調例句難度。
