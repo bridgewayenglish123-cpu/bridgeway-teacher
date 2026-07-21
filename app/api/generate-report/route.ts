@@ -108,6 +108,7 @@ export async function POST(request: Request) {
       .eq("student_id", student.id);
 
     const studentName = student.en_name ?? student.zh_name;
+    const studentLevel = (student as any).level ?? 'Elementary';
     // untyped admin client 對 embed 會解析為 never，存取時轉 any
     const teacherRel = lesson.teacher as any;
     const teacherName =
@@ -134,6 +135,13 @@ export async function POST(request: Request) {
 分析以下英文課堂的轉錄稿，生成一份學習報告。
 
 學生姓名：${studentName}
+學生程度：${studentLevel}（Beginner / Elementary / Intermediate / Upper-Intermediate）
+請根據學生程度調整例句和說明的難度：
+- Beginner：超短句、常見日常詞彙、句型簡單
+- Elementary：短句、基本詞彙、避免複雜句型
+- Intermediate：自然的中等長度句子、可以有從句
+- Upper-Intermediate：自然流暢、可用較豐富的詞彙和句型
+同時請從逐字稿判斷學生實際表現，若實際程度與設定不符，以逐字稿為準微調例句難度。
 老師姓名：${teacherName}
 上課日期：${lesson.date}
 學習目標：${student.learning_goal ?? "未設定"}
