@@ -18,6 +18,14 @@ function Btn({ kind, size, onClick, disabled, children }: {
   );
 }
 
+function FieldHint({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[11px] mt-1 leading-relaxed" style={{ color: C.muted }}>
+      {children}
+    </div>
+  );
+}
+
 interface Props {
   lessonId: string;
   studentName: string;
@@ -39,42 +47,40 @@ export function UploadReportModal({
 }: Props) {
   const [mode, setMode] = useState<Mode>("vtt");
   const [step, setStep] = useState<Step>("upload");
-  const [note, setNote] = useState("");
-  const [file, setFile] = useState<File | null>(null);
-  const [vttContent, setVttContent] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // AI 候選清單（全部）
+  // ── VTT mode ──
+  const [file, setFile] = useState<File | null>(null);
+  const [vttContent, setVttContent] = useState("");
   const [candidateWords, setCandidateWords] = useState<string[]>([]);
   const [candidatePhrases, setCandidatePhrases] = useState<string[]>([]);
-
-  // 老師勾選的
   const [selectedWords, setSelectedWords] = useState<Set<string>>(new Set());
   const [selectedPhrases, setSelectedPhrases] = useState<Set<string>>(new Set());
 
-  // 手動補充
+  // ── Manual mode ──
+  const [manualPerformance, setManualPerformance] = useState("");
+  const [manualMoment, setManualMoment] = useState("");
+  const [manualErrors, setManualErrors] = useState("");
+  const [manualNextFocus, setManualNextFocus] = useState("");
+  const [note, setNote] = useState("");
+
+  // ── Shared vocab (manual Step 2 + VTT extra) ──
+  const [extraWords, setExtraWords] = useState<string[]>([]);
+  const [extraPhrases, setExtraPhrases] = useState<string[]>([]);
   const [newWord, setNewWord] = useState("");
   const [newPhrase, setNewPhrase] = useState("");
   const [wordWarning, setWordWarning] = useState("");
   const [phraseWarning, setPhraseWarning] = useState("");
-  const [extraWords, setExtraWords] = useState<string[]>([]);
-  const [extraPhrases, setExtraPhrases] = useState<string[]>([]);
+
+  // ── Confirm ──
   const [suspectWords, setSuspectWords] = useState<string[]>([]);
   const [isValidating, setIsValidating] = useState(false);
 
-  // Manual Input
-  const [manualPerformance, setManualPerformance] = useState("");
-  const [manualVocab, setManualVocab] = useState("");
-  const [manualPhrases, setManualPhrases] = useState("");
-  const [manualErrors, setManualErrors] = useState("");
-  const [manualNextFocus, setManualNextFocus] = useState("");
-
-  // 已選總數
   const totalSelected = selectedWords.size + selectedPhrases.size + extraWords.length + extraPhrases.length;
   const atMax = totalSelected >= MAX_VOCAB;
 
-  // 拼寫檢查
+  // ── Spell check ──
   const checkSpelling = async (word: string, setter: (s: string) => void) => {
     const w = word.trim().toLowerCase();
     if (!w) return;
@@ -96,7 +102,7 @@ export function UploadReportModal({
     } catch {}
   };
 
-  // Step 1: Upload VTT → 提取候選詞彙
+  // ── VTT: Extract vocab ──
   const handleExtractVocab = async () => {
     if (!file) return;
     setErrorMsg(null);
@@ -116,7 +122,6 @@ export function UploadReportModal({
         const phrases = (data.phrases || []).map((p: any) => typeof p === "string" ? p : p.phrase).filter(Boolean);
         setCandidateWords(words);
         setCandidatePhrases(phrases);
-        // 預設全部勾選（不超過 MAX_VOCAB）
         const initWords = new Set<string>(words.slice(0, Math.min(words.length, MAX_VOCAB)));
         const remaining = MAX_VOCAB - initWords.size;
         const initPhrases = new Set<string>(phrases.slice(0, Math.max(0, remaining)));
@@ -128,7 +133,7 @@ export function UploadReportModal({
     finally { setIsLoading(false); }
   };
 
-  // 切換勾選
+  // ── Toggle selection ──
   const toggleWord = (w: string) => {
     setSelectedWords(prev => {
       const next = new Set(prev);
@@ -137,7 +142,6 @@ export function UploadReportModal({
       next.add(w); return next;
     });
   };
-
   const togglePhrase = (p: string) => {
     setSelectedPhrases(prev => {
       const next = new Set(prev);
@@ -147,33 +151,24 @@ export function UploadReportModal({
     });
   };
 
-  // 手動補充
+  // ── Add extra vocab ──
   const addWord = () => {
     const w = newWord.trim().toLowerCase().replace(/[^a-z\s\'\-]/g, "");
-    if (!w || selectedWords.has(w) || extraWords.includes(w)) return;
-    if (atMax) return;
+    if (!w || selectedWords.has(w) || extraWords.includes(w) || atMax) return;
     setExtraWords(prev => [...prev, w]);
-    setNewWord("");
-    setWordWarning("");
+    setNewWord(""); setWordWarning("");
   };
-
   const addPhrase = () => {
     const p = newPhrase.trim().toLowerCase().replace(/[^a-z\s\'\-]/g, "");
-    if (!p || selectedPhrases.has(p) || extraPhrases.includes(p)) return;
-    if (atMax) return;
+    if (!p || selectedPhrases.has(p) || extraPhrases.includes(p) || atMax) return;
     setExtraPhrases(prev => [...prev, p]);
-    setNewPhrase("");
-    setPhraseWarning("");
+    setNewPhrase(""); setPhraseWarning("");
   };
 
-  // 驗證並進入確認畫面
+  // ── Confirm: validate ──
   const handleConfirm = async () => {
     setIsValidating(true);
-    const allWords = [...Array.from(selectedWords), ...extraWords];
-    const allPhrases = [...Array.from(selectedPhrases), ...extraPhrases];
     const manualItems = [...extraWords, ...extraPhrases];
-
-    // 只驗證手動輸入的（AI 找的不驗證）
     const suspects: string[] = [];
     await Promise.all(manualItems.map(async (w) => {
       const term = w.trim().toLowerCase().split(" ")[0];
@@ -189,48 +184,32 @@ export function UploadReportModal({
     setStep("confirm");
   };
 
-  // Step 2: 生成報告
-  const handleGenerate = async () => {
-    setStep("generating");
-    setIsLoading(true);
-    setErrorMsg(null);
-    try {
-      const finalWords = [...Array.from(selectedWords), ...extraWords];
-      const finalPhrases = [...Array.from(selectedPhrases), ...extraPhrases];
-      const body = mode === "vtt"
-        ? { lessonId, vttContent, vocabulary: finalWords, phrases: finalPhrases, teacherNote: note, existingReportId }
-        : { lessonId, manualInput: { performance: manualPerformance, vocabulary: manualVocab, phrases: manualPhrases, errors: manualErrors, nextFocus: manualNextFocus }, teacherNote: note, existingReportId };
-
-      const res = await fetch("/api/generate-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (res.ok) { setStep("done"); onGenerated(); generateOG(lessonId); }
-      else {
-        const data = await res.json().catch(() => ({}));
-        setErrorMsg(typeof data?.error === "string" ? data.error : "Generation failed.");
-        setStep("error");
-      }
-    } catch { setStep("error"); }
-    finally { setIsLoading(false); }
-  };
-
-  // Manual mode 直接生成
-  const handleManualConfirm = () => {
+  const handleManualConfirm = async () => {
+    setIsValidating(true);
+    const allVocab = [...extraWords, ...extraPhrases];
+    const suspects: string[] = [];
+    await Promise.all(allVocab.map(async (w) => {
+      const term = w.trim().toLowerCase().split(" ")[0];
+      if (!term) return;
+      try {
+        const res = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(term)}&max=1`);
+        const data: { word: string }[] = await res.json();
+        if (!data.length || data[0].word !== term) suspects.push(w);
+      } catch {}
+    }));
+    setSuspectWords(suspects);
+    setIsValidating(false);
     setStep("confirm");
   };
 
-  const handleManualGenerate = async () => {
-    setStep("generating");
-    setIsLoading(true);
-    setErrorMsg(null);
+  // ── Generate ──
+  const handleGenerate = async () => {
+    setStep("generating"); setIsLoading(true); setErrorMsg(null);
     try {
-      const res = await fetch("/api/generate-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId, manualInput: { performance: manualPerformance, vocabulary: manualVocab, phrases: manualPhrases, errors: manualErrors, nextFocus: manualNextFocus }, teacherNote: note, existingReportId }),
-      });
+      const finalWords = [...Array.from(selectedWords), ...extraWords];
+      const finalPhrases = [...Array.from(selectedPhrases), ...extraPhrases];
+      const body = { lessonId, vttContent, vocabulary: finalWords, phrases: finalPhrases, teacherNote: note, existingReportId };
+      const res = await fetch("/api/generate-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (res.ok) { setStep("done"); onGenerated(); generateOG(lessonId); }
       else {
         const data = await res.json().catch(() => ({}));
@@ -240,6 +219,43 @@ export function UploadReportModal({
     } catch { setStep("error"); }
     finally { setIsLoading(false); }
   };
+
+  const handleManualGenerate = async () => {
+    setStep("generating"); setIsLoading(true); setErrorMsg(null);
+    try {
+      const body = {
+        lessonId,
+        manualInput: {
+          performance: manualPerformance,
+          memorableMoment: manualMoment,
+          vocabulary: extraWords.join(", "),
+          phrases: extraPhrases.join(", "),
+          errors: manualErrors,
+          nextFocus: manualNextFocus,
+        },
+        teacherNote: note,
+        existingReportId,
+      };
+      const res = await fetch("/api/generate-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (res.ok) { setStep("done"); onGenerated(); generateOG(lessonId); }
+      else {
+        const data = await res.json().catch(() => ({}));
+        setErrorMsg(typeof data?.error === "string" ? data.error : "Generation failed.");
+        setStep("error");
+      }
+    } catch { setStep("error"); }
+    finally { setIsLoading(false); }
+  };
+
+  // ── Step indicator labels ──
+  const vttSteps = ["upload", "vocab", "confirm", "generating"] as const;
+  const manualSteps = ["upload", "vocab", "confirm", "generating"] as const;
+  const stepLabels: Record<string, string> = { upload: mode === "manual" ? "Notes" : "Upload", vocab: "Vocabulary", confirm: "Review", generating: "Generate" };
+  const stepOrder: Record<string, number> = { upload: 0, vocab: 1, confirm: 2, generating: 3 };
+  const currentOrder = stepOrder[step] ?? 0;
+
+  const performanceWordCount = manualPerformance.trim().split(/\s+/).filter(Boolean).length;
+  const manualVocabReady = extraWords.length + extraPhrases.length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -261,63 +277,62 @@ export function UploadReportModal({
         {/* Content */}
         <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
 
-          {/* 模式切換 */}
+          {/* Mode toggle */}
           {step === "upload" && (
-            <div className="flex gap-2">
-              {(["vtt", "manual"] as Mode[]).map(m => (
-                <button key={m} onClick={() => setMode(m)}
-                  className="flex-1 rounded-xl py-2 text-[13px] font-medium border transition"
-                  style={{
-                    background: mode === m ? C.navy : "transparent",
-                    color: mode === m ? "#fff" : C.muted,
-                    borderColor: mode === m ? C.navy : C.line,
-                  }}>
-                  {m === "vtt" ? "Upload VTT (AI)" : "Manual Input"}
-                </button>
-              ))}
-            </div>
+            <>
+              <div className="flex gap-2">
+                {(["vtt", "manual"] as Mode[]).map(m => (
+                  <button key={m} onClick={() => setMode(m)}
+                    className="flex-1 rounded-xl py-2 text-[13px] font-medium border transition"
+                    style={{ background: mode === m ? C.navy : "transparent", color: mode === m ? "#fff" : C.muted, borderColor: mode === m ? C.navy : C.line }}>
+                    {m === "vtt" ? "Upload VTT (AI)" : "Manual Input"}
+                  </button>
+                ))}
+              </div>
+              {mode === "manual" && (
+                <div className="rounded-xl px-3 py-2.5 text-[12px]" style={{ background: "#EEF2FF", color: "#3730A3" }}>
+                  💡 Have a recording? Switch to <button onClick={() => setMode("vtt")} className="underline font-medium">Upload VTT</button> for a more detailed, personalised report.
+                </div>
+              )}
+            </>
           )}
 
-          {/* Step 進度條 */}
-          {mode === "vtt" && step !== "done" && step !== "error" && (
-            <div className="flex items-center gap-2">
+          {/* Step indicator */}
+          {step !== "done" && step !== "error" && (
+            <div className="flex items-center gap-1">
               {(["upload", "vocab", "confirm", "generating"] as const).map((s, i) => {
-                const stepOrder = { upload: 0, vocab: 1, confirm: 2, generating: 3 };
-                const currentOrder = stepOrder[step as keyof typeof stepOrder] ?? 0;
                 const sOrder = stepOrder[s];
                 const done = currentOrder > sOrder;
                 const active = step === s;
                 return (
-                  <div key={s} className="flex items-center gap-2 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                  <div key={s} className="flex items-center gap-1 flex-1">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
                         style={{ background: done ? C.green : active ? C.navy : C.line, color: done || active ? "#fff" : C.muted }}>
                         {done ? "✓" : i + 1}
                       </div>
-                      <span className="text-[11px]" style={{ color: active ? C.navy : C.muted }}>
-                        {s === "upload" ? "Upload" : s === "vocab" ? "Select" : s === "confirm" ? "Review" : "Generate"}
+                      <span className="text-[11px] hidden sm:block" style={{ color: active ? C.navy : C.muted }}>
+                        {stepLabels[s]}
                       </span>
                     </div>
-                    {i < 3 && <div className="flex-1 h-px" style={{ background: C.line }} />}
+                    {i < 3 && <div className="flex-1 h-px mx-1" style={{ background: C.line }} />}
                   </div>
                 );
               })}
             </div>
           )}
 
-          {/* Step 1: VTT Upload */}
+          {/* ── VTT Upload ── */}
           {step === "upload" && mode === "vtt" && (
             <div className="space-y-3">
               <div>
-                <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: C.muted }}>VTT Transcript</label>
-                <input type="file" accept=".vtt"
-                  onChange={e => setFile(e.target.files?.[0] || null)}
-                  className="w-full text-sm" style={{ color: C.navy }} />
+                <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: C.muted }}>VTT Transcript *</label>
+                <input type="file" accept=".vtt" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm" style={{ color: C.navy }} />
               </div>
               <div>
-                <label className="text-[12px] font-semibold mb-1.5 block" style={{ color: C.muted }}>Teacher Note (optional)</label>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>Teacher Note <span style={{ color: C.muted, fontWeight: 400 }}>(optional)</span></label>
                 <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
-                  placeholder="Any special observations from this lesson?"
+                  placeholder="A personal message to your student — visible in their report."
                   className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
                   style={{ borderColor: C.line, color: C.navy }} />
               </div>
@@ -325,66 +340,94 @@ export function UploadReportModal({
             </div>
           )}
 
-          {/* Step 1: Manual */}
+          {/* ── Manual Step 1: Lesson Notes ── */}
           {step === "upload" && mode === "manual" && (
-            <div className="space-y-3">
-              {[
-                { label: "Student Performance *", val: manualPerformance, set: setManualPerformance, ph: "e.g. Asked lots of questions today...", rows: 2 },
-                { label: "Key Vocabulary (comma separated)", val: manualVocab, set: setManualVocab, ph: "e.g. camouflage, predator, ancient", rows: 1 },
-                { label: "Key Phrases (comma separated)", val: manualPhrases, set: setManualPhrases, ph: "e.g. set off, travel light", rows: 1 },
-                { label: "Areas to Improve", val: manualErrors, set: setManualErrors, ph: "e.g. Used wrong past tense 4 times", rows: 1 },
-                { label: "Next Lesson Focus", val: manualNextFocus, set: setManualNextFocus, ph: "e.g. Practice past tense speaking", rows: 1 },
-              ].map(({ label, val, set, ph, rows }) => (
-                <div key={label}>
-                  <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>{label}</label>
-                  <textarea value={val} onChange={e => set(e.target.value)} rows={rows}
-                    placeholder={ph} disabled={isLoading}
-                    className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none disabled:opacity-50"
-                    style={{ borderColor: C.line, color: C.navy }} />
-                </div>
-              ))}
+            <div className="space-y-4">
+              {/* Student Performance */}
               <div>
-                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>Teacher Note (optional)</label>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  What happened in today\'s lesson? *
+                  <span className="ml-2 font-normal" style={{ color: performanceWordCount >= 20 ? C.green : C.amber }}>
+                    {performanceWordCount} words {performanceWordCount < 20 ? "(min. 20)" : "✓"}
+                  </span>
+                </label>
+                <textarea value={manualPerformance} onChange={e => setManualPerformance(e.target.value)} rows={5}
+                  placeholder={"Describe what you covered, how the student engaged, any breakthroughs or difficulties.\n\ne.g. Nancy and I discussed Taiwanese food and cooking methods. She actively used sequencing words (first, then, finally) but consistently used present tense instead of past tense when narrating. She was engaged and asked good questions about vocabulary."}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
+                  style={{ borderColor: performanceWordCount > 0 && performanceWordCount < 20 ? C.amber : C.line, color: C.navy }} />
+                <FieldHint>Cover: topic covered · student engagement · any breakthroughs or struggles</FieldHint>
+              </div>
+
+              {/* Memorable Moment */}
+              <div>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  Any memorable moment or notable quote? <span style={{ fontWeight: 400 }}>(optional)</span>
+                </label>
+                <textarea value={manualMoment} onChange={e => setManualMoment(e.target.value)} rows={2}
+                  placeholder={"e.g. Nancy said \'I want to make the beef noodle soup that my grandma teached me\' — she used \'teached\' instead of \'taught\'"}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
+                  style={{ borderColor: C.line, color: C.navy }} />
+                <FieldHint>A specific moment helps AI generate a more personalised report for your student.</FieldHint>
+              </div>
+
+              {/* Areas to Improve */}
+              <div>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  What does the student need to improve? <span style={{ fontWeight: 400 }}>(optional)</span>
+                </label>
+                <textarea value={manualErrors} onChange={e => setManualErrors(e.target.value)} rows={2}
+                  placeholder={"e.g. Past tense irregular verbs (eat→ate, go→went)\nMispronouncing \'shrimp\' and \'olive oil\'"}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
+                  style={{ borderColor: C.line, color: C.navy }} />
+                <FieldHint>List specific errors or patterns. One per line.</FieldHint>
+              </div>
+
+              {/* Next Lesson Focus */}
+              <div>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  What will you focus on next lesson? <span style={{ fontWeight: 400 }}>(optional)</span>
+                </label>
+                <textarea value={manualNextFocus} onChange={e => setManualNextFocus(e.target.value)} rows={2}
+                  placeholder={"e.g. Practice narrating past events using irregular verbs\nIntroduce more sequencing vocabulary"}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
+                  style={{ borderColor: C.line, color: C.navy }} />
+                <FieldHint>Your plan for the next session.</FieldHint>
+              </div>
+
+              {/* Teacher Note */}
+              <div>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  Teacher Note <span style={{ fontWeight: 400 }}>(optional — visible to student)</span>
+                </label>
                 <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
-                  placeholder="Message to student" disabled={isLoading}
-                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none disabled:opacity-50"
+                  placeholder={"e.g. Great effort today! Your food vocabulary is really growing."}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
                   style={{ borderColor: C.line, color: C.navy }} />
               </div>
             </div>
           )}
 
-          {/* Step 2: 勾選詞彙 */}
-          {step === "vocab" && (
+          {/* ── VTT Vocab Selection (Step 2) ── */}
+          {step === "vocab" && mode === "vtt" && (
             <div className="space-y-4">
-              {/* 已選計數 */}
               <div className="flex items-center justify-between">
-                <div className="text-[13px] font-semibold" style={{ color: C.navy }}>
-                  Select vocabulary for the report
-                </div>
+                <div className="text-[13px] font-semibold" style={{ color: C.navy }}>Select vocabulary for the report</div>
                 <div className="text-[12px] font-medium px-2.5 py-1 rounded-full"
                   style={{ background: atMax ? "#FEF3C7" : "#F0EDE6", color: atMax ? "#92400E" : C.muted }}>
-                  {totalSelected} / {MAX_VOCAB} selected
+                  {totalSelected} / {MAX_VOCAB}
                 </div>
               </div>
 
-              {/* 候選單字 */}
               {candidateWords.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>
-                    Words ({candidateWords.length} found)
-                  </div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>Words ({candidateWords.length} found by AI)</div>
                   <div className="flex flex-wrap gap-2">
                     {candidateWords.map(w => {
                       const checked = selectedWords.has(w);
-                      const disabled = !checked && atMax;
                       return (
-                        <button key={w} onClick={() => toggleWord(w)} disabled={disabled}
+                        <button key={w} onClick={() => toggleWord(w)} disabled={!checked && atMax}
                           className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
-                          style={{
-                            background: checked ? C.navy : "#fff",
-                            color: checked ? "#fff" : C.navy,
-                            borderColor: checked ? C.navy : C.line,
-                          }}>
+                          style={{ background: checked ? C.navy : "#fff", color: checked ? "#fff" : C.navy, borderColor: checked ? C.navy : C.line }}>
                           {w} {checked ? "✓" : ""}
                         </button>
                       );
@@ -393,24 +436,16 @@ export function UploadReportModal({
                 </div>
               )}
 
-              {/* 候選片語 */}
               {candidatePhrases.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>
-                    Phrases ({candidatePhrases.length} found)
-                  </div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>Phrases ({candidatePhrases.length} found by AI)</div>
                   <div className="flex flex-wrap gap-2">
                     {candidatePhrases.map(p => {
                       const checked = selectedPhrases.has(p);
-                      const disabled = !checked && atMax;
                       return (
-                        <button key={p} onClick={() => togglePhrase(p)} disabled={disabled}
+                        <button key={p} onClick={() => togglePhrase(p)} disabled={!checked && atMax}
                           className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
-                          style={{
-                            background: checked ? "#5A3A7C" : "#fff",
-                            color: checked ? "#fff" : "#5A3A7C",
-                            borderColor: checked ? "#5A3A7C" : C.line,
-                          }}>
+                          style={{ background: checked ? "#5A3A7C" : "#fff", color: checked ? "#fff" : "#5A3A7C", borderColor: checked ? "#5A3A7C" : C.line }}>
                           {p} {checked ? "✓" : ""}
                         </button>
                       );
@@ -419,13 +454,10 @@ export function UploadReportModal({
                 </div>
               )}
 
-              {/* 手動補充 */}
+              {/* Manual add */}
               {!atMax && (
                 <div className="border-t pt-3 space-y-2" style={{ borderColor: C.line }}>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: C.muted }}>
-                    Add manually ({MAX_VOCAB - totalSelected} slots left)
-                  </div>
-                  {/* 補充單字 */}
+                  <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: C.muted }}>Add manually ({MAX_VOCAB - totalSelected} slots left)</div>
                   <div>
                     <div className="flex gap-2">
                       <input type="text" value={newWord}
@@ -439,7 +471,6 @@ export function UploadReportModal({
                     </div>
                     {wordWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {wordWarning}</div>}
                   </div>
-                  {/* 補充片語 */}
                   <div>
                     <div className="flex gap-2">
                       <input type="text" value={newPhrase}
@@ -453,99 +484,168 @@ export function UploadReportModal({
                     </div>
                     {phraseWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {phraseWarning}</div>}
                   </div>
-                  {/* 已手動加入的 */}
                   {(extraWords.length > 0 || extraPhrases.length > 0) && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
                       {extraWords.map(w => (
                         <span key={w} className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium"
                           style={{ background: "#EEF2FF", color: "#3730A3" }}>
-                          {w}
-                          <button onClick={() => setExtraWords(prev => prev.filter(x => x !== w))} className="hover:opacity-60">×</button>
+                          {w} <button onClick={() => setExtraWords(prev => prev.filter(x => x !== w))}>×</button>
                         </span>
                       ))}
                       {extraPhrases.map(p => (
                         <span key={p} className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium"
                           style={{ background: "#F5F0FF", color: "#5A3A7C" }}>
-                          {p}
-                          <button onClick={() => setExtraPhrases(prev => prev.filter(x => x !== p))} className="hover:opacity-60">×</button>
+                          {p} <button onClick={() => setExtraPhrases(prev => prev.filter(x => x !== p))}>×</button>
                         </span>
                       ))}
                     </div>
                   )}
                 </div>
               )}
-
               {atMax && (
                 <div className="text-[12px] rounded-lg px-3 py-2" style={{ background: "#FEF3C7", color: "#92400E" }}>
-                  Maximum {MAX_VOCAB} items selected. Deselect some to add more.
+                  Maximum {MAX_VOCAB} items selected.
                 </div>
               )}
             </div>
           )}
 
-          {/* 確認摘要 */}
+          {/* ── Manual Vocab (Step 2) ── */}
+          {step === "vocab" && mode === "manual" && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-[13px] font-semibold" style={{ color: C.navy }}>Add vocabulary from this lesson</div>
+                <div className="text-[12px] font-medium px-2.5 py-1 rounded-full"
+                  style={{ background: atMax ? "#FEF3C7" : "#F0EDE6", color: atMax ? "#92400E" : C.muted }}>
+                  {totalSelected} / {MAX_VOCAB}
+                </div>
+              </div>
+
+              <div className="rounded-xl px-3 py-2.5 text-[12px]" style={{ background: "#FEF3C7", color: "#92400E" }}>
+                ⚠ At least one word or phrase is required to generate a report.
+              </div>
+
+              {/* Words */}
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>Words</div>
+                <div className="flex gap-2">
+                  <input type="text" value={newWord}
+                    onChange={e => { setNewWord(e.target.value); setWordWarning(""); }}
+                    onKeyDown={e => e.key === "Enter" && addWord()}
+                    onBlur={() => checkSpelling(newWord, setWordWarning)}
+                    placeholder="e.g. camouflage"
+                    className="flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
+                    style={{ borderColor: wordWarning ? "#D97706" : C.line, color: C.navy }} />
+                  <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim() || atMax}>Add</Btn>
+                </div>
+                {wordWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {wordWarning}</div>}
+                <FieldHint>Words the student learned or needed correction on. Press Enter or click Add.</FieldHint>
+              </div>
+
+              {/* Phrases */}
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>Phrases</div>
+                <div className="flex gap-2">
+                  <input type="text" value={newPhrase}
+                    onChange={e => { setNewPhrase(e.target.value); setPhraseWarning(""); }}
+                    onKeyDown={e => e.key === "Enter" && addPhrase()}
+                    onBlur={() => checkSpelling(newPhrase.split(" ")[0], setPhraseWarning)}
+                    placeholder="e.g. set off, make sure you"
+                    className="flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
+                    style={{ borderColor: phraseWarning ? "#D97706" : C.line, color: C.navy }} />
+                  <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim() || atMax}>Add</Btn>
+                </div>
+                {phraseWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {phraseWarning}</div>}
+                <FieldHint>Multi-word expressions or collocations. Press Enter or click Add.</FieldHint>
+              </div>
+
+              {/* Tags */}
+              {(extraWords.length > 0 || extraPhrases.length > 0) && (
+                <div className="flex flex-wrap gap-1.5">
+                  {extraWords.map(w => (
+                    <span key={w} className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium"
+                      style={{ background: "#EEF2FF", color: "#3730A3" }}>
+                      {w} <button onClick={() => setExtraWords(prev => prev.filter(x => x !== w))}>×</button>
+                    </span>
+                  ))}
+                  {extraPhrases.map(p => (
+                    <span key={p} className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium"
+                      style={{ background: "#F5F0FF", color: "#5A3A7C" }}>
+                      {p} <button onClick={() => setExtraPhrases(prev => prev.filter(x => x !== p))}>×</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              {atMax && (
+                <div className="text-[12px] rounded-lg px-3 py-2" style={{ background: "#FEF3C7", color: "#92400E" }}>
+                  Maximum {MAX_VOCAB} items selected.
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Confirm ── */}
           {step === "confirm" && (
             <div className="space-y-4">
-              <div className="text-[14px] font-semibold" style={{ color: C.navy }}>
-                Confirm before generating
-              </div>
+              <div className="text-[14px] font-semibold" style={{ color: C.navy }}>Review before generating</div>
 
-              {/* 摘要 */}
+              {/* Summary */}
               <div className="rounded-xl border p-4 space-y-2" style={{ borderColor: C.line }}>
+                {mode === "vtt" ? (<>
+                  <div className="flex justify-between text-[13px]">
+                    <span style={{ color: C.muted }}>Words selected</span>
+                    <span className="font-semibold" style={{ color: C.navy }}>{selectedWords.size + extraWords.length}</span>
+                  </div>
+                  <div className="flex justify-between text-[13px]">
+                    <span style={{ color: C.muted }}>Phrases selected</span>
+                    <span className="font-semibold" style={{ color: C.navy }}>{selectedPhrases.size + extraPhrases.length}</span>
+                  </div>
+                </>) : (<>
+                  <div className="flex justify-between text-[13px]">
+                    <span style={{ color: C.muted }}>Lesson notes</span>
+                    <span className="font-semibold" style={{ color: C.navy }}>{performanceWordCount} words</span>
+                  </div>
+                  <div className="flex justify-between text-[13px]">
+                    <span style={{ color: C.muted }}>Vocabulary added</span>
+                    <span className="font-semibold" style={{ color: C.navy }}>{extraWords.length + extraPhrases.length} items</span>
+                  </div>
+                </>)}
                 <div className="flex justify-between text-[13px]">
-                  <span style={{ color: C.muted }}>Words selected</span>
-                  <span className="font-semibold" style={{ color: C.navy }}>
-                    {selectedWords.size + extraWords.length}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[13px]">
-                  <span style={{ color: C.muted }}>Phrases selected</span>
-                  <span className="font-semibold" style={{ color: C.navy }}>
-                    {selectedPhrases.size + extraPhrases.length}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[13px]">
-                  <span style={{ color: C.muted }}>Total</span>
-                  <span className="font-bold" style={{ color: C.gold }}>
-                    {totalSelected} / {MAX_VOCAB}
-                  </span>
+                  <span style={{ color: C.muted }}>Total vocabulary</span>
+                  <span className="font-bold" style={{ color: C.gold }}>{totalSelected} / {MAX_VOCAB}</span>
                 </div>
               </div>
 
-              {/* 疑問單字警告 */}
+              {/* Quality reminder for manual */}
+              {mode === "manual" && (
+                <div className="rounded-xl p-3 text-[12px] leading-relaxed" style={{ background: "#EEF2FF", color: "#3730A3" }}>
+                  💡 Manual reports rely entirely on your notes. The more detail you provided, the better the report will be for your student.
+                </div>
+              )}
+
+              {/* Suspect words */}
               {suspectWords.length > 0 && (
                 <div className="rounded-xl p-4 space-y-2" style={{ background: "#FEF3C7", border: "1px solid #FDE68A" }}>
-                  <div className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
-                    ⚠ Possible spelling errors in manually added items:
-                  </div>
+                  <div className="text-[13px] font-semibold" style={{ color: "#92400E" }}>⚠ Possible spelling errors:</div>
                   <div className="flex flex-wrap gap-1.5">
                     {suspectWords.map(w => (
                       <span key={w} className="rounded-full px-2.5 py-1 text-[12px] font-medium"
-                        style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FDE68A" }}>
-                        {w}
-                      </span>
+                        style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FDE68A" }}>{w}</span>
                     ))}
                   </div>
-                  <div className="text-[12px]" style={{ color: "#92400E" }}>
-                    You can go back to fix these, or continue anyway.
-                  </div>
+                  <div className="text-[12px]" style={{ color: "#92400E" }}>You can go back to fix these, or continue anyway.</div>
                 </div>
               )}
 
-              {mode === "manual" && (
+              {suspectWords.length === 0 && (
                 <div className="rounded-xl p-3 text-[13px]" style={{ background: "#F0FDF4", color: "#166534" }}>
-                  ✓ Manual input ready. Click Generate to create the report.
-                </div>
-              )}
-              {mode === "vtt" && suspectWords.length === 0 && (
-                <div className="rounded-xl p-3 text-[13px]" style={{ background: "#F0FDF4", color: "#166534" }}>
-                  ✓ All vocabulary looks good. Ready to generate.
+                  ✓ Everything looks good. Ready to generate.
                 </div>
               )}
             </div>
           )}
 
-          {/* 生成中 */}
+          {/* Generating */}
           {step === "generating" && (
             <div className="py-8 text-center space-y-3">
               <div className="text-[32px]">⏳</div>
@@ -554,7 +654,7 @@ export function UploadReportModal({
             </div>
           )}
 
-          {/* 完成 */}
+          {/* Done */}
           {step === "done" && (
             <div className="py-8 text-center space-y-3">
               <div className="text-[36px]">✓</div>
@@ -563,9 +663,9 @@ export function UploadReportModal({
             </div>
           )}
 
-          {/* 錯誤 */}
+          {/* Error */}
           {step === "error" && (
-            <div className="py-4 space-y-2">
+            <div className="py-4">
               <div className="text-[13px] rounded-lg px-3 py-2" style={{ background: "#FEF2F2", color: "#DC2626" }}>
                 {errorMsg || "An error occurred. Please try again."}
               </div>
@@ -586,8 +686,10 @@ export function UploadReportModal({
           {step === "upload" && mode === "manual" && (
             <>
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
-              <Btn kind="gold" size="sm" onClick={handleManualConfirm} disabled={!manualPerformance.trim() || isLoading}>
-                Review & Confirm →
+              <Btn kind="gold" size="sm"
+                onClick={() => setStep("vocab")}
+                disabled={manualPerformance.trim().split(/\s+/).filter(Boolean).length < 20}>
+                Next: Add Vocabulary →
               </Btn>
             </>
           )}
@@ -595,10 +697,15 @@ export function UploadReportModal({
             <>
               <Btn kind="ghost" size="sm" onClick={() => setStep("upload")}>← Back</Btn>
               <div className="flex items-center gap-3">
-                <span className="text-[12px]" style={{ color: totalSelected === 0 ? C.red : C.muted }}>
-                  {totalSelected === 0 ? "Select at least 1 item" : `${totalSelected} selected`}
-                </span>
-                <Btn kind="gold" size="sm" onClick={handleConfirm} disabled={totalSelected === 0 || isValidating}>
+                {mode === "manual" && !manualVocabReady && (
+                  <span className="text-[12px]" style={{ color: C.red }}>Add at least 1 word or phrase</span>
+                )}
+                {mode === "vtt" && totalSelected === 0 && (
+                  <span className="text-[12px]" style={{ color: C.red }}>Select at least 1 item</span>
+                )}
+                <Btn kind="gold" size="sm"
+                  onClick={mode === "manual" ? handleManualConfirm : handleConfirm}
+                  disabled={(mode === "manual" ? !manualVocabReady : totalSelected === 0) || isValidating}>
                   {isValidating ? "Checking..." : "Review & Confirm →"}
                 </Btn>
               </div>
@@ -606,16 +713,14 @@ export function UploadReportModal({
           )}
           {step === "confirm" && (
             <>
-              <Btn kind="ghost" size="sm" onClick={() => mode === "manual" ? setStep("upload") : setStep("vocab")}>← Back</Btn>
+              <Btn kind="ghost" size="sm" onClick={() => setStep("vocab")}>← Back</Btn>
               <Btn kind="gold" size="sm" onClick={mode === "manual" ? handleManualGenerate : handleGenerate}>
                 {suspectWords.length > 0 ? "Generate Anyway" : "Generate Report"}
               </Btn>
             </>
           )}
           {step === "generating" && (
-            <div className="w-full text-center text-[12px]" style={{ color: C.muted }}>
-              Please do not close this window.
-            </div>
+            <div className="w-full text-center text-[12px]" style={{ color: C.muted }}>Please do not close this window.</div>
           )}
           {step === "done" && (
             <div className="w-full flex justify-end">
@@ -625,7 +730,7 @@ export function UploadReportModal({
           {step === "error" && (
             <>
               <Btn kind="ghost" size="sm" onClick={() => setStep("confirm")}>← Back</Btn>
-              <Btn kind="gold" size="sm" onClick={handleGenerate}>Retry</Btn>
+              <Btn kind="gold" size="sm" onClick={mode === "manual" ? handleManualGenerate : handleGenerate}>Retry</Btn>
             </>
           )}
         </div>
