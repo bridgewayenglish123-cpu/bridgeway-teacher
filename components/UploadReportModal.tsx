@@ -295,10 +295,10 @@ export function UploadReportModal({
   const manualVocabReady = extraWords.length + extraPhrases.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       style={{ background: "rgba(26,34,54,0.55)" }}
       onClick={e => { if (e.target === e.currentTarget && step !== "generating") onClose(); }}>
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[90vh] overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b" style={{ borderColor: C.line }}>
@@ -489,7 +489,7 @@ export function UploadReportModal({
                       return (
                         <div key={w} className="flex flex-col items-start gap-0.5">
                           <button onClick={() => toggleWord(w)} disabled={!checked && atMax}
-                            className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
+                            className="rounded-xl px-3 py-2 sm:py-1.5 text-[13px] font-medium border transition disabled:opacity-35 active:scale-95"
                             style={{ background: checked ? C.navy : "#fff", color: checked ? "#fff" : C.navy, borderColor: checked ? C.navy : C.line }}>
                             {w} {checked ? "✓" : ""}
                           </button>
@@ -516,7 +516,7 @@ export function UploadReportModal({
                       return (
                         <div key={p} className="flex flex-col items-start gap-0.5">
                           <button onClick={() => togglePhrase(p)} disabled={!checked && atMax}
-                            className="rounded-xl px-3 py-1.5 text-[13px] font-medium border transition disabled:opacity-35"
+                            className="rounded-xl px-3 py-2 sm:py-1.5 text-[13px] font-medium border transition disabled:opacity-35 active:scale-95"
                             style={{ background: checked ? "#5A3A7C" : "#fff", color: checked ? "#fff" : "#5A3A7C", borderColor: checked ? "#5A3A7C" : C.line }}>
                             {p} {checked ? "✓" : ""}
                           </button>
@@ -753,7 +753,7 @@ export function UploadReportModal({
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t flex justify-between items-center" style={{ borderColor: C.line }}>
+        <div className="px-5 py-4 border-t flex justify-between items-center gap-2" style={{ borderColor: C.line }}>
           {step === "upload" && mode === "vtt" && (
             <>
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
