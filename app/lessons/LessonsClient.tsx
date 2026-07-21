@@ -13,6 +13,7 @@ type Lesson = {
   studentZh: string
   studentEn: string
   hasReport: boolean
+  reportId?: string | null
 }
 
 const PAGE_SIZE = 20
@@ -26,7 +27,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
   const [filter, setFilter] = useState<'all' | 'uploaded' | 'pending'>('all')
   const [sort, setSort] = useState<'newest' | 'oldest'>('newest')
   const [page, setPage] = useState(1)
-  const [modal, setModal] = useState<{ lesson: Lesson } | null>(null)
+  const [modal, setModal] = useState<{ lesson: Lesson; isReupload: boolean } | null>(null)
   const [uploadedIds, setUploadedIds] = useState<Set<string>>(
     new Set(lessons.filter(l => l.hasReport).map(l => l.id))
   )
@@ -53,7 +54,6 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
     return list
   }, [lessons, search, filter, sort, uploadedIds])
 
-  // 搜尋/篩選/排序改變時重設頁碼
   useEffect(() => { setPage(1) }, [search, filter, sort])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
@@ -67,23 +67,23 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
       <div className="mb-5">
         <div className="flex items-baseline justify-between">
           <h1 className="font-serif text-[26px] sm:text-[30px] font-medium" style={{ color: C.navy }}>
-            課程記錄
+            Lesson History
           </h1>
           <div className="text-[13px]" style={{ color: C.muted }}>
             {pendingCount > 0 && (
-              <span className="mr-2 font-medium" style={{ color: C.red }}>{pendingCount} 待上傳</span>
+              <span className="mr-2 font-medium" style={{ color: C.red }}>{pendingCount} pending</span>
             )}
-            共 {lessons.length} 堂
+            {lessons.length} lessons total
           </div>
         </div>
       </div>
 
-      {/* 統計卡 */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
         {[
-          { label: '全部', value: lessons.length, color: C.navy },
-          { label: '待上傳', value: pendingCount, color: C.red },
-          { label: '已上傳', value: uploadedCount, color: C.green },
+          { label: 'All', value: lessons.length, color: C.navy },
+          { label: 'Pending', value: pendingCount, color: C.red },
+          { label: 'Uploaded', value: uploadedCount, color: C.green },
         ].map(s => (
           <div key={s.label} className="rounded-2xl bg-white p-3 sm:p-4 text-center shadow-sm">
             <div className="font-serif text-[24px] sm:text-[28px] font-medium" style={{ color: s.color }}>
@@ -94,20 +94,20 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
         ))}
       </div>
 
-      {/* 搜尋 */}
-      <input type="text" placeholder="搜尋學生姓名..."
+      {/* Search */}
+      <input type="text" placeholder="Search student name..."
         value={search} onChange={e => setSearch(e.target.value)}
         className="w-full rounded-2xl border px-4 py-2.5 text-[14px] outline-none transition mb-3"
         style={{ borderColor: C.line, color: C.navy, background: '#fff',
           boxShadow: '0 1px 4px rgba(26,34,54,0.04)' }} />
 
-      {/* 篩選 + 排序 */}
+      {/* Filters */}
       <div className="flex gap-2 flex-wrap mb-4">
         <div className="flex gap-1 rounded-xl p-1 flex-1 sm:flex-none" style={{ background: '#EDE9E0' }}>
           {([
-            { v: 'all', l: '全部' },
-            { v: 'pending', l: '待上傳' },
-            { v: 'uploaded', l: '已上傳' },
+            { v: 'all', l: 'All' },
+            { v: 'pending', l: 'Pending' },
+            { v: 'uploaded', l: 'Uploaded' },
           ] as const).map(f => (
             <button key={f.v} onClick={() => setFilter(f.v)}
               className="flex-1 sm:flex-none rounded-lg px-3 py-1.5 text-[12px] font-medium transition"
@@ -117,7 +117,7 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
           ))}
         </div>
         <div className="flex gap-1 rounded-xl p-1" style={{ background: '#EDE9E0' }}>
-          {([{ v: 'newest', l: '最新' }, { v: 'oldest', l: '最舊' }] as const).map(s => (
+          {([{ v: 'newest', l: 'Newest' }, { v: 'oldest', l: 'Oldest' }] as const).map(s => (
             <button key={s.v} onClick={() => setSort(s.v)}
               className="rounded-lg px-3 py-1.5 text-[12px] font-medium transition"
               style={{ background: sort === s.v ? C.navy : 'transparent', color: sort === s.v ? '#fff' : C.muted }}>
@@ -127,43 +127,55 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
         </div>
       </div>
 
-      {/* 結果數 */}
+      {/* Result count */}
       {(search || filter !== 'all') && (
-        <div className="text-[12px] mb-3" style={{ color: C.muted }}>找到 {filtered.length} 筆</div>
+        <div className="text-[12px] mb-3" style={{ color: C.muted }}>{filtered.length} results</div>
       )}
 
-      {/* 課程列表 */}
+      {/* Lesson list */}
       <div className="flex flex-col gap-2 mb-6">
         {paginated.map(l => {
           const uploaded = uploadedIds.has(l.id)
           const name = l.studentEn || l.studentZh
+          const month = new Date(l.date + 'T00:00:00').toLocaleString('en', { month: 'short' })
           return (
             <div key={l.id}
               className="rounded-2xl bg-white p-4 shadow-sm flex items-center gap-3 sm:gap-4"
               style={{ borderLeft: `3px solid ${uploaded ? C.green : C.line}` }}>
+              {/* Date */}
               <div className="flex-shrink-0 text-center w-9 sm:w-11">
-                <div className="text-[10px] font-medium" style={{ color: C.muted }}>{l.date.slice(5, 7)}月</div>
+                <div className="text-[10px] font-medium uppercase" style={{ color: C.muted }}>{month}</div>
                 <div className="font-serif text-[22px] sm:text-[26px] font-medium leading-none mt-0.5" style={{ color: C.navy }}>
                   {l.date.slice(8)}
                 </div>
               </div>
               <div className="w-px self-stretch" style={{ background: C.line }} />
+              {/* Info */}
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-[14px] sm:text-[15px] truncate" style={{ color: C.navy }}>{name}</div>
                 <div className="text-[11px] sm:text-[12px] mt-0.5 flex items-center gap-1.5" style={{ color: C.muted }}>
                   {l.time && <span>{l.time.slice(0, 5)}</span>}
-                  {l.duration && <><span>·</span><span>{l.duration} 分鐘</span></>}
+                  {l.duration && <><span>·</span><span>{l.duration} min</span></>}
                 </div>
               </div>
-              <div className="flex-shrink-0">
+              {/* Actions */}
+              <div className="flex-shrink-0 flex items-center gap-2">
                 {uploaded ? (
-                  <span className="text-[11px] sm:text-[12px] px-2.5 py-1.5 rounded-full font-medium"
-                    style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ 已上傳</span>
+                  <>
+                    <span className="text-[11px] sm:text-[12px] px-2.5 py-1.5 rounded-full font-medium"
+                      style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Uploaded</span>
+                    <button
+                      onClick={() => setModal({ lesson: l, isReupload: true })}
+                      className="text-[11px] sm:text-[12px] px-2.5 py-1.5 rounded-full font-medium transition active:scale-95"
+                      style={{ background: '#F0EDE6', color: C.navy }}>
+                      Regenerate
+                    </button>
+                  </>
                 ) : (
-                  <button onClick={() => setModal({ lesson: l })}
+                  <button onClick={() => setModal({ lesson: l, isReupload: false })}
                     className="text-[11px] sm:text-[12px] px-2.5 py-1.5 rounded-full font-medium transition active:scale-95"
                     style={{ background: C.gold, color: '#fff' }}>
-                    上傳報告
+                    Upload Report
                   </button>
                 )}
               </div>
@@ -174,13 +186,13 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
         {paginated.length === 0 && (
           <div className="rounded-2xl border border-dashed py-12 text-center" style={{ borderColor: C.line }}>
             <p className="text-[14px]" style={{ color: C.muted }}>
-              {search || filter !== 'all' ? '找不到符合的課程' : '還沒有完課記錄'}
+              {search || filter !== 'all' ? 'No lessons found.' : 'No completed lessons yet.'}
             </p>
           </div>
         )}
       </div>
 
-      {/* 分頁 */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <button
@@ -188,9 +200,8 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
             disabled={page === 1}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition disabled:opacity-40"
             style={{ background: '#fff', color: C.navy, border: `1px solid ${C.line}` }}>
-            ← 上一頁
+            ← Previous
           </button>
-
           <div className="flex items-center gap-1.5">
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
@@ -210,31 +221,30 @@ export function LessonsClient({ lessons, teacherName, isAdmin }: {
                     }}>{p}</button>
               )}
           </div>
-
           <button
             onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo(0, 0) }}
             disabled={page === totalPages}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-medium transition disabled:opacity-40"
             style={{ background: '#fff', color: C.navy, border: `1px solid ${C.line}` }}>
-            下一頁 →
+            Next →
           </button>
         </div>
       )}
 
-      {/* 頁碼資訊 */}
       {totalPages > 1 && (
         <div className="text-center text-[12px] mt-3" style={{ color: C.muted }}>
-          第 {page} 頁，共 {totalPages} 頁（每頁 {PAGE_SIZE} 筆）
+          Page {page} of {totalPages} · {PAGE_SIZE} per page
         </div>
       )}
 
-      {/* Upload Modal */}
+      {/* Upload / Regenerate Modal */}
       {modal && (
         <UploadReportModal
           lessonId={modal.lesson.id}
           studentName={modal.lesson.studentEn || modal.lesson.studentZh}
           lessonDate={modal.lesson.date}
           teacherName={teacherName}
+          existingReportId={modal.isReupload ? (modal.lesson.reportId ?? undefined) : undefined}
           onGenerated={() => {
             setUploadedIds(prev => {
               const next = new Set(Array.from(prev))

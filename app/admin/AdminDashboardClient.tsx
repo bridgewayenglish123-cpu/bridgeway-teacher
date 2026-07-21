@@ -69,7 +69,7 @@ export function AdminDashboardClient({
         ))}
       </div>
 
-      {/* 老師狀態 */}
+      {/* Teacher狀態 */}
       <section>
         <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>Teachers</h2>
         <div className="flex flex-col gap-3">
@@ -128,7 +128,7 @@ export function AdminDashboardClient({
         </div>
       </section>
 
-      {/* 待上傳報告 */}
+      {/* Pending Reports */}
       {pendingLessons.length > 0 && (
         <section>
           <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>

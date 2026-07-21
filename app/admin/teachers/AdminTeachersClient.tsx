@@ -158,7 +158,7 @@ export function AdminTeachersClient({ teachers }: { teachers: Teacher[] }) {
             {status === 'done' ? (
               <>
                 <div className="rounded-lg p-3 text-sm" style={{ background: '#E8F5E9', color: '#2E7D32' }}>
-                  完成！請重新整理頁面查看最新狀態。
+                  Done! Please refresh the page.
                 </div>
                 <button onClick={() => setSelected(null)}
                   className="w-full py-2 rounded-lg text-sm font-medium text-white"

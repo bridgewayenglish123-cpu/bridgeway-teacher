@@ -26,7 +26,7 @@ export default async function LessonsPage() {
     .select(`
       id, date, time, duration, class_type, status, teacher_id,
       student:students!student_id ( id, zh_name, en_name ),
-      lesson_reports ( id )
+      lesson_reports ( id, lesson_id )
     `)
     .eq('status', 'completed')
     .eq('is_active', true)
@@ -52,6 +52,7 @@ export default async function LessonsPage() {
       studentZh: student?.zh_name ?? '',
       studentEn: student?.en_name ?? '',
       hasReport,
+    reportId: l.lesson_reports?.[0]?.id ?? null,
     }
   })
 
