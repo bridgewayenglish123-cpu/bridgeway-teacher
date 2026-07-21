@@ -240,9 +240,9 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: C.gold }}>Next Lesson Focus</div>
               <ul className="space-y-2">
                 {report.next_focus
-                  .split(/\n/)
-                  .map(s => s.trim().replace(/^[\d]+[.)\s]+/, '').replace(/^[•·\-]\s*/, ''))
-                  .filter(s => s.length > 2)
+                  .split(/\n|(?=\s*\d+\.\s)/)
+                  .map(s => s.trim().replace(/^\d+\.\s*/, '').replace(/^[•·\-]\s*/, ''))
+                  .filter(s => s.length > 5)
                   .map((item, i) => (
                     <li key={i} className="flex items-start gap-2 text-[13px] leading-[1.7]" style={{ color: C.navy }}>
                       <span className="flex-shrink-0 mt-[3px] w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
