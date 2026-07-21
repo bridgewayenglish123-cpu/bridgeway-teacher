@@ -49,7 +49,7 @@ export function UploadReportModal({
   const [newWord, setNewWord] = useState("");
   const [newPhrase, setNewPhrase] = useState("");
 
-  // 手動填寫
+  // Manual Input
   const [manualPerformance, setManualPerformance] = useState("");
   const [manualVocab, setManualVocab] = useState("");
   const [manualPhrases, setManualPhrases] = useState("");
@@ -58,7 +58,7 @@ export function UploadReportModal({
 
   const busy = isLoading;
 
-  // Step 1: 上傳 VTT → 提取詞彙
+  // Step 1: Upload VTT → 提取詞彙
   const handleExtractVocab = async () => {
     if (!file) return;
     setErrorMsg(null);
@@ -79,7 +79,7 @@ export function UploadReportModal({
         setStep("vocab");
       }
     } catch {
-      setErrorMsg("提取失敗，請再試一次");
+      setErrorMsg("Extraction failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +95,7 @@ export function UploadReportModal({
     } catch {}
   };
 
-  // Step 2: 確認詞彙後生成報告
+  // Step 2: Review Vocabulary後Generate Report
   const handleGenerate = async () => {
     setErrorMsg(null);
     setIsLoading(true);
@@ -184,7 +184,7 @@ export function UploadReportModal({
         style={{ background: "white", boxShadow: "0 8px 32px rgba(15,42,74,0.18)" }}>
 
         <h3 className="text-base font-semibold" style={{ color: C.navy }}>
-          {existingReportId ? "重新生成 AI 學習報告" : "生成 AI 學習報告"}
+          {existingReportId ? "Regenerate AI Report" : "Generate AI Report"}
         </h3>
 
         {/* 模式切換（只在 upload step 顯示）*/}
@@ -194,7 +194,7 @@ export function UploadReportModal({
               <button key={m} onClick={() => setMode(m)} disabled={busy}
                 className="flex-1 rounded-md py-1.5 text-xs font-semibold transition"
                 style={{ background: mode === m ? C.navy : "transparent", color: mode === m ? "#fff" : C.muted }}>
-                {m === "vtt" ? "上傳 VTT（AI 生成）" : "手動填寫"}
+                {m === "vtt" ? "Upload VTT (AI)" : "Manual Input"}
               </button>
             ))}
           </div>
@@ -202,9 +202,9 @@ export function UploadReportModal({
 
         {/* 課堂資訊 */}
         <div className="rounded-lg px-3 py-2.5 text-sm space-y-0.5" style={{ background: "#EAF0F6", color: C.navy }}>
-          <div><span style={{ color: C.muted }}>學生：</span>{studentName}</div>
-          <div><span style={{ color: C.muted }}>日期：</span>{lessonDate}</div>
-          <div><span style={{ color: C.muted }}>老師：</span>{teacherName}</div>
+          <div><span style={{ color: C.muted }}>Student: </span>{studentName}</div>
+          <div><span style={{ color: C.muted }}>Date: </span>{lessonDate}</div>
+          <div><span style={{ color: C.muted }}>Teacher: </span>{teacherName}</div>
         </div>
 
         {/* 進度指示（VTT 模式）*/}
@@ -222,7 +222,7 @@ export function UploadReportModal({
                   </div>
                   <span className="text-[11px] font-medium"
                     style={{ color: step === s ? C.navy : C.muted }}>
-                    {s === "upload" ? "上傳 VTT" : "確認詞彙"}
+                    {s === "upload" ? "Upload VTT" : "Review Vocabulary"}
                   </span>
                 </div>
                 {i === 0 && <div className="flex-1 h-px" style={{ background: C.line, minWidth: 20 }} />}
@@ -236,19 +236,19 @@ export function UploadReportModal({
           <>
             {existingReportId && (
               <div className="rounded-lg p-3 text-xs" style={{ background: "#FFF8E1", color: C.amber }}>
-                重新生成將覆蓋現有報告。
+                This will overwrite the existing report.
               </div>
             )}
             <div>
-              <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>老師手記（選填）</label>
+              <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>Teacher Note (optional)</label>
               <textarea className="w-full rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: C.line, color: C.text, minHeight: 60, resize: "vertical" }}
-                placeholder="這堂課有什麼特別的觀察？"
+                placeholder="Any special observations from this lesson?"
                 value={note} onChange={(e) => setNote(e.target.value)} disabled={busy} />
             </div>
             <div>
               <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>
-                VTT 轉錄檔 <span style={{ color: C.red }}>*</span>
+                VTT Transcript <span style={{ color: C.red }}>*</span>
               </label>
               <input type="file" accept=".vtt" className="w-full text-sm"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)} disabled={busy} />
@@ -258,26 +258,26 @@ export function UploadReportModal({
               <div className="rounded-lg p-3 text-sm" style={{ background: "#FEF2F2", color: C.red }}>{errorMsg}</div>
             )}
             <div className="flex items-center justify-end gap-2">
-              {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>AI 分析詞彙中，約需 15–30 秒…</span>}
-              <Btn kind="ghost" size="sm" onClick={onClose} disabled={busy}>關閉</Btn>
+              {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>Analyzing vocabulary, please wait...</span>}
+              <Btn kind="ghost" size="sm" onClick={onClose} disabled={busy}>Close</Btn>
               <Btn kind="gold" size="sm" onClick={handleExtractVocab} disabled={!file || busy}>
-                {busy ? "分析中…" : "下一步：確認詞彙"}
+                {busy ? "Analyzing..." : "下一步：Review Vocabulary"}
               </Btn>
             </div>
           </>
         )}
 
-        {/* ── Step 1: 手動填寫 ── */}
+        {/* ── Step 1: Manual Input ── */}
         {step === "upload" && mode === "manual" && (
           <>
             <div className="space-y-3">
               {[
-                { label: "學生課堂表現 *", value: manualPerformance, set: setManualPerformance, placeholder: "例：今天主動提問很多，過去式動詞錯了幾次...", rows: 3, required: true },
-                { label: "本課重點單字（逗號分隔）", value: manualVocab, set: setManualVocab, placeholder: "例：camouflage, predator, ancient", rows: 1 },
-                { label: "本課重點片語（逗號分隔）", value: manualPhrases, set: setManualPhrases, placeholder: "例：set off, travel light", rows: 1 },
-                { label: "需要加強的地方", value: manualErrors, set: setManualErrors, placeholder: "例：過去式動詞用錯 4 次", rows: 2 },
-                { label: "下堂課建議", value: manualNextFocus, set: setManualNextFocus, placeholder: "例：練習過去式口說", rows: 2 },
-                { label: "老師手記（給學生看）", value: note, set: setNote, placeholder: "給學生的話", rows: 2 },
+                { label: "Student Performance *", value: manualPerformance, set: setManualPerformance, placeholder: "e.g. Asked lots of questions today, made some past tense errors...", rows: 3, required: true },
+                { label: "Key Vocabulary (comma separated)", value: manualVocab, set: setManualVocab, placeholder: "e.g. camouflage, predator, ancient", rows: 1 },
+                { label: "Key Phrases (comma separated)", value: manualPhrases, set: setManualPhrases, placeholder: "e.g. set off, travel light", rows: 1 },
+                { label: "Areas to Improve", value: manualErrors, set: setManualErrors, placeholder: "e.g. Used wrong past tense 4 times", rows: 2 },
+                { label: "Next Lesson Focus", value: manualNextFocus, set: setManualNextFocus, placeholder: "e.g. Practice past tense speaking", rows: 2 },
+                { label: "Teacher Note (visible to student)", value: note, set: setNote, placeholder: "Message to student", rows: 2 },
               ].map(f => (
                 <div key={f.label}>
                   <label className="block text-xs font-semibold mb-1" style={{ color: C.muted }}>{f.label}</label>
@@ -300,25 +300,25 @@ export function UploadReportModal({
             )}
             <div className="flex items-center justify-end gap-2">
               {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>AI 生成中，約需 30–60 秒…</span>}
-              <Btn kind="ghost" size="sm" onClick={onClose} disabled={busy}>關閉</Btn>
+              <Btn kind="ghost" size="sm" onClick={onClose} disabled={busy}>Close</Btn>
               <Btn kind="gold" size="sm" onClick={handleManualGenerate} disabled={!manualPerformance.trim() || busy}>
-                {busy ? "生成中…" : "生成報告"}
+                {busy ? "Generating..." : "Generate Report"}
               </Btn>
             </div>
           </>
         )}
 
-        {/* ── Step 2: 確認詞彙 ── */}
+        {/* ── Step 2: Review Vocabulary ── */}
         {step === "vocab" && (
           <>
             <div className="rounded-lg p-3 text-sm" style={{ background: "#EAF0F6", color: C.navy }}>
-              以下是 AI 從逐字稿中找到的重點詞彙，請確認後生成報告。可以刪除不需要的，也可以補充 AI 遺漏的。
+              AI found these key vocabulary items from the transcript. Review and edit before generating the report.
             </div>
 
             {/* 單字 */}
             <div>
               <div className="text-xs font-semibold mb-2" style={{ color: C.muted }}>
-                本課單字 ({words.length})
+                Words ({words.length})
               </div>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {words.map((w, i) => (
@@ -329,19 +329,19 @@ export function UploadReportModal({
                   </span>
                 ))}
                 {words.length === 0 && removedWords.length === 0 && (
-                  <span className="text-xs" style={{ color: C.muted }}>AI 未找到符合條件的單字</span>
+                  <span className="text-xs" style={{ color: C.muted }}>No words found by AI</span>
                 )}
               </div>
               <div className="flex gap-2">
                 <input type="text" value={newWord} onChange={e => setNewWord(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addWord()}
-                  placeholder="補充單字…" className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
+                  placeholder="Add a word..." className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
                   style={{ borderColor: C.line, color: C.text }} />
-                <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim()}>新增</Btn>
+                <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim()}>Add</Btn>
               </div>
               {removedWords.length > 0 && (
                 <div className="mt-2">
-                  <div className="text-[11px] mb-1.5" style={{ color: C.muted }}>已移除（點擊復原）：</div>
+                  <div className="text-[11px] mb-1.5" style={{ color: C.muted }}>Removed (click to restore):</div>
                   <div className="flex flex-wrap gap-1.5">
                     {removedWords.map((w, i) => (
                       <button key={i} onClick={() => restoreWord(w)}
@@ -358,7 +358,7 @@ export function UploadReportModal({
             {/* 片語 */}
             <div>
               <div className="text-xs font-semibold mb-2" style={{ color: C.muted }}>
-                本課片語 ({phrases.length})
+                Phrases ({phrases.length})
               </div>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {phrases.map((p, i) => (
@@ -369,19 +369,19 @@ export function UploadReportModal({
                   </span>
                 ))}
                 {phrases.length === 0 && (
-                  <span className="text-xs" style={{ color: C.muted }}>AI 未找到符合條件的片語</span>
+                  <span className="text-xs" style={{ color: C.muted }}>No phrases found by AI</span>
                 )}
               </div>
               <div className="flex gap-2">
                 <input type="text" value={newPhrase} onChange={e => setNewPhrase(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addPhrase()}
-                  placeholder="補充片語…" className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
+                  placeholder="Add a phrase..." className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
                   style={{ borderColor: C.line, color: C.text }} />
-                <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim()}>新增</Btn>
+                <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim()}>Add</Btn>
               </div>
               {removedPhrases.length > 0 && (
                 <div className="mt-2">
-                  <div className="text-[11px] mb-1.5" style={{ color: C.muted }}>已移除（點擊復原）：</div>
+                  <div className="text-[11px] mb-1.5" style={{ color: C.muted }}>Removed (click to restore):</div>
                   <div className="flex flex-wrap gap-1.5">
                     {removedPhrases.map((p, i) => (
                       <button key={i} onClick={() => restorePhrase(p)}
@@ -399,10 +399,10 @@ export function UploadReportModal({
               <div className="rounded-lg p-3 text-sm" style={{ background: "#FEF2F2", color: C.red }}>{errorMsg}</div>
             )}
             <div className="flex items-center justify-end gap-2">
-              {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>AI 生成報告中，約需 30–60 秒…</span>}
-              <Btn kind="ghost" size="sm" onClick={() => setStep("upload")} disabled={busy}>← 返回</Btn>
+              {busy && <span className="text-xs mr-auto" style={{ color: C.muted }}>Generating report, please wait...</span>}
+              <Btn kind="ghost" size="sm" onClick={() => setStep("upload")} disabled={busy}>← Back</Btn>
               <Btn kind="gold" size="sm" onClick={handleGenerate} disabled={busy}>
-                {busy ? "生成中…" : "確認並生成報告"}
+                {busy ? "Generating..." : "Confirm & Generate"}
               </Btn>
             </div>
           </>
@@ -412,10 +412,10 @@ export function UploadReportModal({
         {step === "done" && (
           <>
             <div className="rounded-lg p-3 text-sm" style={{ background: "#E8F5E9", color: C.green }}>
-              報告已生成，學生已收到通知。
+              Report generated successfully.
             </div>
             <div className="flex justify-end">
-              <Btn kind="gold" size="sm" onClick={onClose}>關閉</Btn>
+              <Btn kind="gold" size="sm" onClick={onClose}>Close</Btn>
             </div>
           </>
         )}
@@ -424,11 +424,11 @@ export function UploadReportModal({
         {step === "error" && (
           <>
             <div className="rounded-lg p-3 text-sm" style={{ background: "#FEF2F2", color: C.red }}>
-              發生錯誤，請再試一次。{errorMsg ? `（${errorMsg}）` : ""}
+              An error occurred. Please try again.{errorMsg ? `（${errorMsg}）` : ""}
             </div>
             <div className="flex justify-end gap-2">
-              <Btn kind="ghost" size="sm" onClick={onClose}>關閉</Btn>
-              <Btn kind="gold" size="sm" onClick={() => setStep("upload")}>重試</Btn>
+              <Btn kind="ghost" size="sm" onClick={onClose}>Close</Btn>
+              <Btn kind="gold" size="sm" onClick={() => setStep("upload")}>Retry</Btn>
             </div>
           </>
         )}

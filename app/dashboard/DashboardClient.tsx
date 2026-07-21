@@ -67,7 +67,7 @@ export function DashboardClient({
         </p>
       </div>
 
-      {/* 待上傳報告 */}
+      {/* Pending Reports */}
       <section>
         <div className="flex items-center gap-2 mb-4">
           <h2 className="text-[18px] font-semibold" style={{ color: C.navy }}>Pending Reports</h2>
@@ -108,7 +108,7 @@ export function DashboardClient({
         )}
       </section>
 
-      {/* 今日課程 */}
+      {/* Today's Lessons */}
       {todayLessons.length > 0 && (
         <section>
           <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>Today's Lessons</h2>
@@ -134,7 +134,7 @@ export function DashboardClient({
         </section>
       )}
 
-      {/* 即將到來的課程 */}
+      {/* Upcoming Lessons的課程 */}
       {futureLessons.length > 0 && (
         <section>
           <h2 className="text-[18px] font-semibold mb-4" style={{ color: C.navy }}>Upcoming Lessons</h2>
