@@ -178,8 +178,20 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           )}
           {report.next_focus && (
             <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.gold }}>Next Lesson Focus</div>
-              <p className="text-[13px] leading-[1.75]" style={{ color: C.navy }}>{report.next_focus}</p>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: C.gold }}>Next Lesson Focus</div>
+              <ul className="space-y-2">
+                {report.next_focus
+                  .split(/\n|(?<=\.\s)(?=[A-Z0-9•\-])|[•·]/)
+                  .map(s => s.trim())
+                  .filter(s => s.length > 0)
+                  .map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[13px] leading-[1.7]" style={{ color: C.navy }}>
+                      <span className="flex-shrink-0 mt-[3px] w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold"
+                        style={{ background: C.gold, color: '#fff' }}>{i + 1}</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+              </ul>
             </div>
           )}
         </div>
