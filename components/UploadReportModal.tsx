@@ -29,7 +29,7 @@ interface Props {
 }
 
 type Mode = "vtt" | "manual";
-type Step = "upload" | "vocab" | "generating" | "done" | "error";
+type Step = "upload" | "vocab" | "confirm" | "generating" | "done" | "error";
 
 const MAX_VOCAB = 15;
 
@@ -60,6 +60,8 @@ export function UploadReportModal({
   const [phraseWarning, setPhraseWarning] = useState("");
   const [extraWords, setExtraWords] = useState<string[]>([]);
   const [extraPhrases, setExtraPhrases] = useState<string[]>([]);
+  const [suspectWords, setSuspectWords] = useState<string[]>([]);
+  const [isValidating, setIsValidating] = useState(false);
 
   // Manual Input
   const [manualPerformance, setManualPerformance] = useState("");
@@ -164,6 +166,29 @@ export function UploadReportModal({
     setPhraseWarning("");
   };
 
+  // 驗證並進入確認畫面
+  const handleConfirm = async () => {
+    setIsValidating(true);
+    const allWords = [...Array.from(selectedWords), ...extraWords];
+    const allPhrases = [...Array.from(selectedPhrases), ...extraPhrases];
+    const manualItems = [...extraWords, ...extraPhrases];
+
+    // 只驗證手動輸入的（AI 找的不驗證）
+    const suspects: string[] = [];
+    await Promise.all(manualItems.map(async (w) => {
+      const term = w.trim().toLowerCase().split(" ")[0];
+      if (!term) return;
+      try {
+        const res = await fetch(`https://api.datamuse.com/words?sp=${encodeURIComponent(term)}&max=1`);
+        const data: { word: string }[] = await res.json();
+        if (!data.length || data[0].word !== term) suspects.push(w);
+      } catch {}
+    }));
+    setSuspectWords(suspects);
+    setIsValidating(false);
+    setStep("confirm");
+  };
+
   // Step 2: 生成報告
   const handleGenerate = async () => {
     setStep("generating");
@@ -252,8 +277,8 @@ export function UploadReportModal({
           {/* Step 進度條 */}
           {mode === "vtt" && step !== "done" && step !== "error" && (
             <div className="flex items-center gap-2">
-              {(["upload", "vocab", "generating"] as const).map((s, i) => {
-                const stepOrder = { upload: 0, vocab: 1, generating: 2 };
+              {(["upload", "vocab", "confirm", "generating"] as const).map((s, i) => {
+                const stepOrder = { upload: 0, vocab: 1, confirm: 2, generating: 3 };
                 const currentOrder = stepOrder[step as keyof typeof stepOrder] ?? 0;
                 const sOrder = stepOrder[s];
                 const done = currentOrder > sOrder;
@@ -266,10 +291,10 @@ export function UploadReportModal({
                         {done ? "✓" : i + 1}
                       </div>
                       <span className="text-[11px]" style={{ color: active ? C.navy : C.muted }}>
-                        {s === "upload" ? "Upload" : s === "vocab" ? "Select" : "Generate"}
+                        {s === "upload" ? "Upload" : s === "vocab" ? "Select" : s === "confirm" ? "Review" : "Generate"}
                       </span>
                     </div>
-                    {i < 2 && <div className="flex-1 h-px" style={{ background: C.line }} />}
+                    {i < 3 && <div className="flex-1 h-px" style={{ background: C.line }} />}
                   </div>
                 );
               })}
@@ -454,6 +479,63 @@ export function UploadReportModal({
             </div>
           )}
 
+          {/* 確認摘要 */}
+          {step === "confirm" && (
+            <div className="space-y-4">
+              <div className="text-[14px] font-semibold" style={{ color: C.navy }}>
+                Confirm before generating
+              </div>
+
+              {/* 摘要 */}
+              <div className="rounded-xl border p-4 space-y-2" style={{ borderColor: C.line }}>
+                <div className="flex justify-between text-[13px]">
+                  <span style={{ color: C.muted }}>Words selected</span>
+                  <span className="font-semibold" style={{ color: C.navy }}>
+                    {selectedWords.size + extraWords.length}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[13px]">
+                  <span style={{ color: C.muted }}>Phrases selected</span>
+                  <span className="font-semibold" style={{ color: C.navy }}>
+                    {selectedPhrases.size + extraPhrases.length}
+                  </span>
+                </div>
+                <div className="flex justify-between text-[13px]">
+                  <span style={{ color: C.muted }}>Total</span>
+                  <span className="font-bold" style={{ color: C.gold }}>
+                    {totalSelected} / {MAX_VOCAB}
+                  </span>
+                </div>
+              </div>
+
+              {/* 疑問單字警告 */}
+              {suspectWords.length > 0 && (
+                <div className="rounded-xl p-4 space-y-2" style={{ background: "#FEF3C7", border: "1px solid #FDE68A" }}>
+                  <div className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+                    ⚠ Possible spelling errors in manually added items:
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {suspectWords.map(w => (
+                      <span key={w} className="rounded-full px-2.5 py-1 text-[12px] font-medium"
+                        style={{ background: "#FEF3C7", color: "#92400E", border: "1px solid #FDE68A" }}>
+                        {w}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-[12px]" style={{ color: "#92400E" }}>
+                    You can go back to fix these, or continue anyway.
+                  </div>
+                </div>
+              )}
+
+              {suspectWords.length === 0 && (
+                <div className="rounded-xl p-3 text-[13px]" style={{ background: "#F0FDF4", color: "#166534" }}>
+                  ✓ All vocabulary looks good. Ready to generate.
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 生成中 */}
           {step === "generating" && (
             <div className="py-8 text-center space-y-3">
@@ -507,10 +589,18 @@ export function UploadReportModal({
                 <span className="text-[12px]" style={{ color: totalSelected === 0 ? C.red : C.muted }}>
                   {totalSelected === 0 ? "Select at least 1 item" : `${totalSelected} selected`}
                 </span>
-                <Btn kind="gold" size="sm" onClick={handleGenerate} disabled={totalSelected === 0}>
-                  Confirm & Generate →
+                <Btn kind="gold" size="sm" onClick={handleConfirm} disabled={totalSelected === 0 || isValidating}>
+                  {isValidating ? "Checking..." : "Review & Confirm →"}
                 </Btn>
               </div>
+            </>
+          )}
+          {step === "confirm" && (
+            <>
+              <Btn kind="ghost" size="sm" onClick={() => setStep("vocab")}>← Back</Btn>
+              <Btn kind="gold" size="sm" onClick={handleGenerate}>
+                {suspectWords.length > 0 ? "Generate Anyway" : "Generate Report"}
+              </Btn>
             </>
           )}
           {step === "generating" && (
@@ -525,7 +615,7 @@ export function UploadReportModal({
           )}
           {step === "error" && (
             <>
-              <Btn kind="ghost" size="sm" onClick={() => setStep("vocab")}>← Back</Btn>
+              <Btn kind="ghost" size="sm" onClick={() => setStep("confirm")}>← Back</Btn>
               <Btn kind="gold" size="sm" onClick={handleGenerate}>Retry</Btn>
             </>
           )}
