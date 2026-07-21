@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { C } from '@/lib/constants'
+import { UploadReportModal } from '@/components/UploadReportModal'
 
 type Report = {
   id: string
@@ -15,15 +16,32 @@ type Report = {
   errors: { pattern?: string; pattern_en?: string; pattern_zh?: string; count?: number; example?: string; correction?: string; tip_en?: string }[] | null
   next_focus: string | null
   lesson: { id: string; date: string; time: string | null; duration: number | null; student: { zh_name: string; en_name: string | null } | null } | null
+      {/* Reupload Modal */}
+      {reuploadTarget && (
+        <UploadReportModal
+          lessonId={reuploadTarget.lessonId}
+          lessonDate={reuploadTarget.lessonDate}
+          studentName={reuploadTarget.studentName}
+          teacherName={teacherName}
+          existingReportId={reuploadTarget.reportId}
+          onGenerated={() => {
+            setReuploadTarget(null)
+          }}
+          onClose={() => setReuploadTarget(null)}
+        />
+      )}
+    </div>
+  )
 }
 
 type View = 'students' | 'reports' | 'detail'
 
-export function ReportsClient({ reports }: { reports: Report[] }) {
+export function ReportsClient({ reports, teacherName }: { reports: Report[]; teacherName: string }) {
   const [search, setSearch] = useState('')
   const [selectedStudentName, setSelectedStudentName] = useState<string | null>(null)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [mobileView, setMobileView] = useState<View>('students')
+  const [reuploadTarget, setReuploadTarget] = useState<{ lessonId: string; lessonDate: string; studentName: string; reportId: string } | null>(null)
 
   const getLesson = (r: Report) => Array.isArray(r.lesson) ? r.lesson[0] : r.lesson
   const getStudent = (r: Report) => {
