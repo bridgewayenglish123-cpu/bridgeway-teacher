@@ -16,22 +16,6 @@ type Report = {
   errors: { pattern?: string; pattern_en?: string; pattern_zh?: string; count?: number; example?: string; correction?: string; tip_en?: string }[] | null
   next_focus: string | null
   lesson: { id: string; date: string; time: string | null; duration: number | null; student: { zh_name: string; en_name: string | null } | null } | null
-      {/* Reupload Modal */}
-      {reuploadTarget && (
-        <UploadReportModal
-          lessonId={reuploadTarget.lessonId}
-          lessonDate={reuploadTarget.lessonDate}
-          studentName={reuploadTarget.studentName}
-          teacherName={teacherName}
-          existingReportId={reuploadTarget.reportId}
-          onGenerated={() => {
-            setReuploadTarget(null)
-          }}
-          onClose={() => setReuploadTarget(null)}
-        />
-      )}
-    </div>
-  )
 }
 
 type View = 'students' | 'reports' | 'detail'
@@ -41,7 +25,9 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
   const [selectedStudentName, setSelectedStudentName] = useState<string | null>(null)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [mobileView, setMobileView] = useState<View>('students')
-  const [reuploadTarget, setReuploadTarget] = useState<{ lessonId: string; lessonDate: string; studentName: string; reportId: string } | null>(null)
+  const [reuploadTarget, setReuploadTarget] = useState<{
+    lessonId: string; lessonDate: string; studentName: string; reportId: string
+  } | null>(null)
 
   const getLesson = (r: Report) => Array.isArray(r.lesson) ? r.lesson[0] : r.lesson
   const getStudent = (r: Report) => {
@@ -53,7 +39,6 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
     return s?.en_name ?? s?.zh_name ?? '—'
   }
 
-  // 學生列表，依最新報告排序
   const studentList = useMemo(() => {
     const map = new Map<string, { name: string; zhName: string; latestDate: string; count: number }>()
     for (const r of reports) {
@@ -63,22 +48,14 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
       const date = l?.date ?? r.created_at.slice(0, 10)
       const existing = map.get(key)
       if (!existing || date > existing.latestDate) {
-        map.set(key, {
-          name: s?.en_name ?? s?.zh_name ?? '—',
-          zhName: s?.zh_name ?? '',
-          latestDate: date,
-          count: (existing?.count ?? 0) + 1,
-        })
-      } else {
-        existing.count++
-      }
+        map.set(key, { name: s?.en_name ?? s?.zh_name ?? '—', zhName: s?.zh_name ?? '', latestDate: date, count: (existing?.count ?? 0) + 1 })
+      } else { existing.count++ }
     }
     return Array.from(map.values())
       .filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.zhName.toLowerCase().includes(search.toLowerCase()))
       .sort((a, b) => b.latestDate.localeCompare(a.latestDate))
   }, [reports, search])
 
-  // 選定學生的報告列表
   const studentReports = useMemo(() => {
     if (!selectedStudentName) return []
     return reports
@@ -101,10 +78,13 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
     setMobileView('detail')
   }
 
-  // ── Report Detail ──────────────────────────────────────────────────────────
   const ReportDetail = ({ report }: { report: Report }) => {
     const lesson = getLesson(report)
+    const student = getStudent(report)
     const analysis = report.analysis_en ?? report.analysis_zh
+    const lessonId = lesson?.id ?? ''
+    const studentName = student?.en_name ?? student?.zh_name ?? 'Student'
+
     return (
       <div className="h-full overflow-y-auto">
         {/* Header */}
@@ -114,9 +94,36 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           <div className="text-xs mb-1" style={{ color: C.muted }}>
             {lesson?.date} · {lesson?.duration} min
           </div>
-          <div className="font-serif text-[18px] font-semibold leading-snug" style={{ color: C.navy }}>
+          <div className="font-serif text-[18px] font-semibold leading-snug mb-3" style={{ color: C.navy }}>
             {analysis?.headline ?? '—'}
           </div>
+
+          {/* 操作按鈕 */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {lessonId && (
+              <a href={`https://app.bridgewayenglish.net/report/${lessonId}`}
+                target="_blank" rel="noopener noreferrer"
+                className="text-[12px] px-3 py-1.5 rounded-xl font-medium transition hover:opacity-80"
+                style={{ background: '#F0EDE6', color: C.navy }}>
+                View in Classroom ↗
+              </a>
+            )}
+            <button
+              onClick={() => {
+                if (!lesson) return
+                setReuploadTarget({
+                  lessonId: lesson.id,
+                  lessonDate: lesson.date,
+                  studentName,
+                  reportId: report.id,
+                })
+              }}
+              className="text-[12px] px-3 py-1.5 rounded-xl font-medium transition hover:opacity-80"
+              style={{ background: C.gold, color: '#fff' }}>
+              Regenerate Report
+            </button>
+          </div>
+
           {report.milestone && (
             <div className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
               style={{ background: '#FBF8EF', color: C.gold, border: '1px solid rgba(194,153,47,0.3)' }}>
@@ -126,15 +133,12 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
         </div>
 
         <div className="px-5 py-4 space-y-5">
-          {/* Summary */}
           {analysis?.body && (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Summary</div>
               <p className="text-[14px] leading-[1.85]" style={{ color: C.navy }}>{analysis.body}</p>
             </div>
           )}
-
-          {/* Strengths */}
           {report.strengths && report.strengths.length > 0 && (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>What They Did Well</div>
@@ -147,8 +151,6 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               </ul>
             </div>
           )}
-
-          {/* Errors */}
           {report.errors && report.errors.length > 0 && (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Areas to Improve</div>
@@ -166,8 +168,6 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               </ul>
             </div>
           )}
-
-          {/* Vocabulary */}
           {report.vocabulary && report.vocabulary.length > 0 && (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>
@@ -183,8 +183,6 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               </div>
             </div>
           )}
-
-          {/* Next Focus */}
           {report.next_focus && (
             <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.gold }}>Next Lesson Focus</div>
@@ -198,9 +196,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
 
   return (
     <div className="flex flex-col" style={{ height: 'calc(100vh - 52px)' }}>
-      {/* ── Desktop: 3-col / Mobile: stack ── */}
       <div className="flex flex-1 overflow-hidden">
-
         {/* Col 1: Student List */}
         <div className={`${mobileView === 'students' ? 'flex' : 'hidden'} sm:flex flex-col border-r`}
           style={{ width: '100%', maxWidth: 220, borderColor: C.line, minWidth: 0 }}>
@@ -257,17 +253,12 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
                   className="w-full text-left px-4 py-3 border-b transition-colors"
                   style={{
                     background: active ? '#EDE9E0' : 'transparent',
-                    borderLeftWidth: 3,
-                    borderLeftStyle: 'solid',
+                    borderLeftWidth: 3, borderLeftStyle: 'solid',
                     borderLeftColor: active ? C.gold : 'transparent',
                     borderBottomColor: C.line,
                   }}>
-                  <div className="text-sm font-medium mb-0.5" style={{ color: C.navy }}>
-                    {lesson?.date ?? '—'}
-                  </div>
-                  <div className="text-xs line-clamp-2" style={{ color: C.muted }}>
-                    {analysis?.headline ?? '—'}
-                  </div>
+                  <div className="text-sm font-medium mb-0.5" style={{ color: C.navy }}>{lesson?.date ?? '—'}</div>
+                  <div className="text-xs line-clamp-2" style={{ color: C.muted }}>{analysis?.headline ?? '—'}</div>
                 </button>
               )
             })}
@@ -290,8 +281,20 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
             </div>
           )}
         </div>
-
       </div>
+
+      {/* Reupload Modal */}
+      {reuploadTarget && (
+        <UploadReportModal
+          lessonId={reuploadTarget.lessonId}
+          lessonDate={reuploadTarget.lessonDate}
+          studentName={reuploadTarget.studentName}
+          teacherName={teacherName}
+          existingReportId={reuploadTarget.reportId}
+          onGenerated={() => setReuploadTarget(null)}
+          onClose={() => setReuploadTarget(null)}
+        />
+      )}
     </div>
   )
 }
