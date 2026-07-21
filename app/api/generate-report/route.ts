@@ -167,7 +167,9 @@ ${transcript}
       "word": "actually",
       "type": "word",
       "definition_zh": "實際上、事實上",
-      "definition_en": "used to emphasize what is really true"
+      "definition_en": "used to emphasize what is really true",
+      "example_en": "I thought it would be boring, but it was actually really fun.",
+      "example_zh": "我以為會很無聊，但其實真的很有趣。"
     }
   ],
   "phrases": [
@@ -175,7 +177,9 @@ ${transcript}
       "phrase": "I think it depends on…",
       "type": "phrase",
       "usage_zh": "表達不確定或視情況而定時使用",
-      "usage_en": "used when the answer varies by situation"
+      "usage_en": "used when the answer varies by situation",
+      "example_en": "I think it depends on how much time you have.",
+      "example_zh": "我覺得要看你有多少時間而定。"
     }
   ],
   "strengths": [
@@ -198,6 +202,7 @@ ${transcript}
     "summary_zh": "這堂課你的文法錯誤比上堂課減少了 2 次，主動提問增加了 2 次。",
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
+  "hidden_gem": "A specific moment from today's lesson that the student might not have noticed — something genuinely impressive or meaningful. Write in warm, story-like Chinese (2-3 sentences). IMPORTANT: Only include this if there is a truly remarkable moment worth highlighting. If nothing stands out, return null.",
   "analysis_zh": {
     "headline": "Annie，你這堂課真的有進步。",
     "body": "具體、有溫度的中文分析，2-4句。"
