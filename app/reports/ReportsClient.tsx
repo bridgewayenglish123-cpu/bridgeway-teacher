@@ -25,6 +25,9 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
   const [selectedStudentName, setSelectedStudentName] = useState<string | null>(null)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [mobileView, setMobileView] = useState<View>('students')
+  const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [noteText, setNoteText] = useState('')
+  const [noteSaving, setNoteSaving] = useState(false)
   const [reuploadTarget, setReuploadTarget] = useState<{
     lessonId: string; lessonDate: string; studentName: string; reportId: string
   } | null>(null)
@@ -176,6 +179,62 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               </div>
             </div>
           )}
+          {/* Teacher Note */}
+          <div className="rounded-xl p-4" style={{ background: '#F7F4EE', border: `1px solid ${C.line}` }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: C.muted }}>
+                Teacher Note
+              </div>
+              {editingNote !== report.id ? (
+                <button
+                  onClick={() => { setEditingNote(report.id); setNoteText(report.teacher_note ?? '') }}
+                  className="text-[11px] px-2.5 py-1 rounded-lg transition hover:opacity-80"
+                  style={{ background: '#EDE9E0', color: C.navy }}>
+                  {report.teacher_note ? 'Edit' : '+ Add Note'}
+                </button>
+              ) : (
+                <div className="flex gap-1.5">
+                  <button onClick={() => setEditingNote(null)}
+                    className="text-[11px] px-2.5 py-1 rounded-lg"
+                    style={{ background: '#EDE9E0', color: C.muted }}>
+                    Cancel
+                  </button>
+                  <button
+                    disabled={noteSaving}
+                    onClick={async () => {
+                      setNoteSaving(true)
+                      await fetch('/api/teacher-note', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reportId: report.id, note: noteText }),
+                      })
+                      report.teacher_note = noteText
+                      setEditingNote(null)
+                      setNoteSaving(false)
+                    }}
+                    className="text-[11px] px-2.5 py-1 rounded-lg font-medium transition disabled:opacity-50"
+                    style={{ background: C.navy, color: '#fff' }}>
+                    {noteSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              )}
+            </div>
+            {editingNote === report.id ? (
+              <textarea
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+                rows={3}
+                placeholder="Write a note for this student..."
+                className="w-full rounded-lg border px-3 py-2 text-[13px] resize-none outline-none"
+                style={{ borderColor: C.line, color: C.navy, background: '#fff' }}
+              />
+            ) : report.teacher_note ? (
+              <p className="text-[13px] leading-relaxed" style={{ color: C.navy }}>{report.teacher_note}</p>
+            ) : (
+              <p className="text-[12px]" style={{ color: C.muted }}>No note yet. Click to add one.</p>
+            )}
+          </div>
+
           {report.next_focus && (
             <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: C.gold }}>Next Lesson Focus</div>
