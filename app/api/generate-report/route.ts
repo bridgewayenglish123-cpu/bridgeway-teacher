@@ -145,13 +145,23 @@ export async function POST(request: Request) {
 - Junior：酷一點、有個性，不過度甜膩，適當挑戰
 - Adult：專業但溫暖，點到為止不囉嗦
 
-【例句難度】依程度調整：
-- Beginner：超短句、常見日常詞彙、句型簡單
-- Elementary：短句、基本詞彙、避免複雜句型
-- Pre-Intermediate：稍長的句子、常見詞彙為主、可以有簡單連接詞
-- Intermediate：自然的中等長度句子、可以有從句
-- Upper-Intermediate：自然流暢、可用較豐富的詞彙和句型
-同時請從逐字稿判斷學生實際表現，若實際程度與設定不符，以逐字稿為準微調例句難度。
+【例句生成規則】例句必須同時滿足兩個獨立維度，不可互相取代：
+
+維度一 — 句型難度（依 level）：
+- Beginner：6-8 字，單一子句，現在式為主
+- Elementary：8-12 字，可用簡單連接詞（and / but / because）
+- Pre-Intermediate：12-16 字，複合句、基本時態變化
+- Intermediate：16-20 字，可含從屬子句、多種時態
+- Upper-Intermediate：20 字以上，慣用語、抽象語境、較複雜句構
+
+維度二 — 語境題材（依 learner_type）：
+- Young Learner：學校、家庭、動物、遊戲、食物，第一人稱，具體可想像
+- Junior：朋友、社群媒體、興趣、校園生活，帶點個性與真實感
+- Adult：職場、旅行、日常決策、人際溝通，實用導向
+
+重要：兩個維度獨立生效。Upper-Intermediate 的 Young Learner 應該得到「句型複雜但題材童趣」的例句，不是成人語境的例句；Beginner 的 Adult 應該得到「句型簡單但題材成熟」的例句。
+
+同時請從逐字稿判斷學生實際表現，若實際程度與設定不符，以逐字稿為準微調難度。
 
 【錯誤呈現】不要直接給答案，用問句方式呈現：
 例：「你今天說了 'I go to school yesterday'——你知道哪裡怪怪的嗎？」
