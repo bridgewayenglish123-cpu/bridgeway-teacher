@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { C } from "@/lib/constants";
 
 function Btn({ kind, size, onClick, disabled, children }: {
@@ -78,6 +78,13 @@ export function UploadReportModal({
   const [newPhrase, setNewPhrase] = useState("");
   const [wordWarning, setWordWarning] = useState("");
   const [phraseWarning, setPhraseWarning] = useState("");
+  // 記錄哪些字是「拼寫查無、但老師堅持加入」的。傳給後端時附註,
+  // 讓 Claude 對這些字謹慎處理:能辨識就正常翻譯,無法辨識就誠實說明。
+  const [forcedWords, setForcedWords] = useState<Set<string>>(new Set());
+  const [forcedPhrases, setForcedPhrases] = useState<Set<string>>(new Set());
+  // 打字即時拼寫檢查的防抖計時器(避免每打一個字母就打一次 API)
+  const wordSpellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const phraseSpellTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Confirm ──
   const [suspectWords, setSuspectWords] = useState<string[]>([]);
@@ -197,20 +204,25 @@ export function UploadReportModal({
   const currentTotal = () =>
     selectedWords.size + selectedPhrases.size + extraWords.length + extraPhrases.length;
 
-  const addWord = () => {
+  const addWord = (force = false) => {
     const w = newWord.trim().toLowerCase().replace(/[^a-z\s\'\-]/g, "");
     if (!w || selectedWords.has(w) || extraWords.includes(w)) return;
     if (currentTotal() >= MAX_VOCAB) { setWordWarning(`Limit reached (${MAX_VOCAB}). Deselect something first.`); return; }
     setExtraWords(prev => [...prev, w]);
+    if (force) setForcedWords(prev => new Set(prev).add(w));
     setNewWord(""); setWordWarning("");
   };
-  const addPhrase = () => {
+  const addPhrase = (force = false) => {
     const p = newPhrase.trim().toLowerCase().replace(/[^a-z\s\'\-]/g, "");
     if (!p || selectedPhrases.has(p) || extraPhrases.includes(p)) return;
     if (currentTotal() >= MAX_VOCAB) { setPhraseWarning(`Limit reached (${MAX_VOCAB}). Deselect something first.`); return; }
     setExtraPhrases(prev => [...prev, p]);
+    if (force) setForcedPhrases(prev => new Set(prev).add(p));
     setNewPhrase(""); setPhraseWarning("");
   };
+  // 警告文字是否代表「拼寫問題」(而非額度已滿)。用來決定按鈕顯示 Add / Add anyway。
+  const isSpellWarning = (warning: string) =>
+    warning.startsWith("Did you mean") || warning.includes("doesn't look like");
 
   // ── Confirm: validate ──
   const handleConfirm = async () => {
@@ -255,7 +267,18 @@ export function UploadReportModal({
     try {
       const finalWords = [...Array.from(selectedWords), ...extraWords];
       const finalPhrases = [...Array.from(selectedPhrases), ...extraPhrases];
-      const body = { lessonId, vttContent, vocabulary: finalWords, phrases: finalPhrases, teacherNote: note, existingReportId };
+      // 後端讀的是 confirmedVocab.words / .phrases。先前誤傳成 vocabulary / phrases,
+      // 導致老師勾選與手動新增的詞彙完全被忽略、AI 自行重抓。這裡修正欄位名,
+      // 並附上 forced 清單(拼寫查無但老師堅持加入的字),供後端提示 Claude 謹慎處理。
+      const body = {
+        lessonId, vttContent, teacherNote: note, existingReportId,
+        confirmedVocab: {
+          words: finalWords,
+          phrases: finalPhrases,
+          forcedWords: Array.from(forcedWords),
+          forcedPhrases: Array.from(forcedPhrases),
+        },
+      };
       const res = await fetch("/api/generate-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (res.ok) { setStep("done"); onGenerated(); generateOG(lessonId); }
       else {
@@ -550,26 +573,48 @@ export function UploadReportModal({
                   <div>
                     <div className="flex gap-2">
                       <input type="text" value={newWord}
-                        onChange={e => { setNewWord(e.target.value); setWordWarning(""); }}
-                        onKeyDown={e => e.key === "Enter" && addWord()}
+                        onChange={e => {
+                        const v = e.target.value;
+                        setNewWord(v); setWordWarning("");
+                        if (wordSpellTimer.current) clearTimeout(wordSpellTimer.current);
+                        if (v.trim()) wordSpellTimer.current = setTimeout(() => checkSpelling(v, setWordWarning), 500);
+                      }}
+                        onKeyDown={e => e.key === "Enter" && addWord(isSpellWarning(wordWarning))}
                         onBlur={() => checkSpelling(newWord, setWordWarning)}
                         placeholder="Add a word..."
                         className="flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
                         style={{ borderColor: wordWarning ? "#D97706" : C.line, color: C.navy }} />
-                      <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim() || atMax}>Add</Btn>
+                      <button type="button" onClick={() => addWord(isSpellWarning(wordWarning))} disabled={!newWord.trim()}
+                        className="px-3 py-1.5 rounded-lg text-[13px] font-medium border transition disabled:opacity-40"
+                        style={isSpellWarning(wordWarning)
+                          ? { borderColor: "#D97706", color: "#D97706", background: "#FFFBEB" }
+                          : { borderColor: C.line, color: C.navy, background: "#fff" }}>
+                        {isSpellWarning(wordWarning) ? "Add anyway" : "Add"}
+                      </button>
                     </div>
                     {wordWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {wordWarning}</div>}
                   </div>
                   <div>
                     <div className="flex gap-2">
                       <input type="text" value={newPhrase}
-                        onChange={e => { setNewPhrase(e.target.value); setPhraseWarning(""); }}
-                        onKeyDown={e => e.key === "Enter" && addPhrase()}
+                        onChange={e => {
+                        const v = e.target.value;
+                        setNewPhrase(v); setPhraseWarning("");
+                        if (phraseSpellTimer.current) clearTimeout(phraseSpellTimer.current);
+                        if (v.trim()) phraseSpellTimer.current = setTimeout(() => checkSpelling(v.split(" ")[0], setPhraseWarning), 500);
+                      }}
+                        onKeyDown={e => e.key === "Enter" && addPhrase(isSpellWarning(phraseWarning))}
                         onBlur={() => checkSpelling(newPhrase.split(" ")[0], setPhraseWarning)}
                         placeholder="Add a phrase..."
                         className="flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
                         style={{ borderColor: phraseWarning ? "#D97706" : C.line, color: C.navy }} />
-                      <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim() || atMax}>Add</Btn>
+                      <button type="button" onClick={() => addPhrase(isSpellWarning(phraseWarning))} disabled={!newPhrase.trim()}
+                        className="px-3 py-1.5 rounded-lg text-[13px] font-medium border transition disabled:opacity-40"
+                        style={isSpellWarning(phraseWarning)
+                          ? { borderColor: "#D97706", color: "#D97706", background: "#FFFBEB" }
+                          : { borderColor: C.line, color: C.navy, background: "#fff" }}>
+                        {isSpellWarning(phraseWarning) ? "Add anyway" : "Add"}
+                      </button>
                     </div>
                     {phraseWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {phraseWarning}</div>}
                   </div>
@@ -619,13 +664,24 @@ export function UploadReportModal({
                 <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>Words</div>
                 <div className="flex gap-2">
                   <input type="text" value={newWord}
-                    onChange={e => { setNewWord(e.target.value); setWordWarning(""); }}
-                    onKeyDown={e => e.key === "Enter" && addWord()}
+                    onChange={e => {
+                        const v = e.target.value;
+                        setNewWord(v); setWordWarning("");
+                        if (wordSpellTimer.current) clearTimeout(wordSpellTimer.current);
+                        if (v.trim()) wordSpellTimer.current = setTimeout(() => checkSpelling(v, setWordWarning), 500);
+                      }}
+                    onKeyDown={e => e.key === "Enter" && addWord(isSpellWarning(wordWarning))}
                     onBlur={() => checkSpelling(newWord, setWordWarning)}
                     placeholder="e.g. camouflage"
                     className="flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
                     style={{ borderColor: wordWarning ? "#D97706" : C.line, color: C.navy }} />
-                  <Btn kind="ghost" size="sm" onClick={addWord} disabled={!newWord.trim() || atMax}>Add</Btn>
+                  <button type="button" onClick={() => addWord(isSpellWarning(wordWarning))} disabled={!newWord.trim()}
+                        className="px-3 py-1.5 rounded-lg text-[13px] font-medium border transition disabled:opacity-40"
+                        style={isSpellWarning(wordWarning)
+                          ? { borderColor: "#D97706", color: "#D97706", background: "#FFFBEB" }
+                          : { borderColor: C.line, color: C.navy, background: "#fff" }}>
+                        {isSpellWarning(wordWarning) ? "Add anyway" : "Add"}
+                      </button>
                 </div>
                 {wordWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {wordWarning}</div>}
                 <FieldHint>Words the student learned or needed correction on. Press Enter or click Add.</FieldHint>
@@ -636,13 +692,24 @@ export function UploadReportModal({
                 <div className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: C.muted }}>Phrases</div>
                 <div className="flex gap-2">
                   <input type="text" value={newPhrase}
-                    onChange={e => { setNewPhrase(e.target.value); setPhraseWarning(""); }}
-                    onKeyDown={e => e.key === "Enter" && addPhrase()}
+                    onChange={e => {
+                        const v = e.target.value;
+                        setNewPhrase(v); setPhraseWarning("");
+                        if (phraseSpellTimer.current) clearTimeout(phraseSpellTimer.current);
+                        if (v.trim()) phraseSpellTimer.current = setTimeout(() => checkSpelling(v.split(" ")[0], setPhraseWarning), 500);
+                      }}
+                    onKeyDown={e => e.key === "Enter" && addPhrase(isSpellWarning(phraseWarning))}
                     onBlur={() => checkSpelling(newPhrase.split(" ")[0], setPhraseWarning)}
                     placeholder="e.g. set off, make sure you"
                     className="flex-1 rounded-lg border px-3 py-1.5 text-[13px] outline-none"
                     style={{ borderColor: phraseWarning ? "#D97706" : C.line, color: C.navy }} />
-                  <Btn kind="ghost" size="sm" onClick={addPhrase} disabled={!newPhrase.trim() || atMax}>Add</Btn>
+                  <button type="button" onClick={() => addPhrase(isSpellWarning(phraseWarning))} disabled={!newPhrase.trim()}
+                        className="px-3 py-1.5 rounded-lg text-[13px] font-medium border transition disabled:opacity-40"
+                        style={isSpellWarning(phraseWarning)
+                          ? { borderColor: "#D97706", color: "#D97706", background: "#FFFBEB" }
+                          : { borderColor: C.line, color: C.navy, background: "#fff" }}>
+                        {isSpellWarning(phraseWarning) ? "Add anyway" : "Add"}
+                      </button>
                 </div>
                 {phraseWarning && <div className="text-[11px] mt-1" style={{ color: "#D97706" }}>⚠ {phraseWarning}</div>}
                 <FieldHint>Multi-word expressions or collocations. Press Enter or click Add.</FieldHint>
