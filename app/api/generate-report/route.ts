@@ -192,7 +192,8 @@ ${transcript}
 - 單字和片語：${confirmedVocab ? `老師已確認的詞彙清單如下，請直接使用，不要自行增減。單字：${(confirmedVocab.words || []).join(", ") || "（無）"}。片語：${(confirmedVocab.phrases || []).join(", ") || "（無）"}` : "只抓老師特別解釋過、學生問過、或課堂重點強調的詞彙，不設數量上限"}
 - 錯誤模式要列出「所有」發生的例句，不只是代表性的一句
 - errors 的 pattern 必須同時提供 pattern_zh（中文名稱）和 pattern_en（英文名稱）
-- examples 欄位是陣列，列出課堂中所有出現的錯誤例句（只能是英文），每個錯誤都要有對應的 correction
+- errors 每一項用 examples 陣列（不是單數 example），列出課堂中所有出現的錯誤例句（只能是英文）
+- examples 陣列裡每個物件的鍵名固定為 original（錯誤原句）和 correction（正確版本），不可用其他鍵名
 - reflection_question 必須是語言輸出練習（造句、口說、寫作），絕對不能問課文情節
 - vocabulary 最少 6 個、最多 10 個；phrases 最少 4 個、最多 8 個
 
@@ -228,9 +229,12 @@ ${transcript}
   "errors": [
     {
       "pattern": "past tense",
+      "pattern_zh": "過去式動詞使用錯誤",
+      "pattern_en": "Incorrect Past Tense",
       "count": 3,
-      "example": "I go to school yesterday",
-      "correction": "I went to school yesterday",
+      "examples": [
+        { "original": "I go to school yesterday", "correction": "I went to school yesterday" }
+      ],
       "tip_zh": "過去式動詞要用 went，不是 go",
       "tip_en": "Use 'went' for past tense, not 'go'"
     }
