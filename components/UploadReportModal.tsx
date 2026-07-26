@@ -191,15 +191,23 @@ export function UploadReportModal({
   };
 
   // ── Add extra vocab ──
+  // 上限用當下即時計算,不能用渲染時算好的 atMax 閉包值:
+  // 使用者常「取消勾選 AI 的字 → 立刻手動新增」,兩個動作相鄰時
+  // atMax 還停留在取消前的舊值,會誤擋新增。改成每次新增時重新數。
+  const currentTotal = () =>
+    selectedWords.size + selectedPhrases.size + extraWords.length + extraPhrases.length;
+
   const addWord = () => {
     const w = newWord.trim().toLowerCase().replace(/[^a-z\s\'\-]/g, "");
-    if (!w || selectedWords.has(w) || extraWords.includes(w) || atMax) return;
+    if (!w || selectedWords.has(w) || extraWords.includes(w)) return;
+    if (currentTotal() >= MAX_VOCAB) { setWordWarning(`Limit reached (${MAX_VOCAB}). Deselect something first.`); return; }
     setExtraWords(prev => [...prev, w]);
     setNewWord(""); setWordWarning("");
   };
   const addPhrase = () => {
     const p = newPhrase.trim().toLowerCase().replace(/[^a-z\s\'\-]/g, "");
-    if (!p || selectedPhrases.has(p) || extraPhrases.includes(p) || atMax) return;
+    if (!p || selectedPhrases.has(p) || extraPhrases.includes(p)) return;
+    if (currentTotal() >= MAX_VOCAB) { setPhraseWarning(`Limit reached (${MAX_VOCAB}). Deselect something first.`); return; }
     setExtraPhrases(prev => [...prev, p]);
     setNewPhrase(""); setPhraseWarning("");
   };
