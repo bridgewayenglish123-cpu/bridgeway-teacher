@@ -303,6 +303,14 @@ export function UploadReportModal({
           errors: manualErrors,
           nextFocus: manualNextFocus,
         },
+        // 與 VTT 模式一致:老師手動填的單字/片語直接指定給 AI「照用不改」,
+        // 並附 forced 清單讓拼寫存疑字得到謹慎處理。
+        confirmedVocab: {
+          words: extraWords,
+          phrases: extraPhrases,
+          forcedWords: Array.from(forcedWords),
+          forcedPhrases: Array.from(forcedPhrases),
+        },
         teacherNote: note,
         existingReportId,
       };
