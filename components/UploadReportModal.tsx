@@ -32,6 +32,7 @@ interface Props {
   lessonDate: string;
   teacherName: string;
   existingReportId?: string;
+  initialNote?: string | null;
   onGenerated: () => void;
   onClose: () => void;
 }
@@ -43,7 +44,7 @@ const MAX_VOCAB = 15;
 
 export function UploadReportModal({
   lessonId, studentName, lessonDate, teacherName,
-  existingReportId, onGenerated, onClose,
+  existingReportId, initialNote, onGenerated, onClose,
 }: Props) {
   const [mode, setMode] = useState<Mode>("vtt");
   const [step, setStep] = useState<Step>("upload");
@@ -67,7 +68,8 @@ export function UploadReportModal({
   const [manualMoment, setManualMoment] = useState("");
   const [manualErrors, setManualErrors] = useState("");
   const [manualNextFocus, setManualNextFocus] = useState("");
-  const [note, setNote] = useState("");
+  // 重新生成時帶出既有 note,老師才看得到當初打的內容(可保留可修改)
+  const [note, setNote] = useState(initialNote ?? "");
 
   // ── Shared vocab (manual Step 2 + VTT extra) ──
   const [extraWords, setExtraWords] = useState<string[]>([]);

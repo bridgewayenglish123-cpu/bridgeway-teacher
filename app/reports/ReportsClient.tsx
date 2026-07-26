@@ -33,7 +33,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
   const [mobileView, setMobileView] = useState<View>('students')
   const [reportsPage, setReportsPage] = useState(1)
   const [reuploadTarget, setReuploadTarget] = useState<{
-    lessonId: string; lessonDate: string; studentName: string; reportId: string
+    lessonId: string; lessonDate: string; studentName: string; reportId: string; teacherNote: string | null
   } | null>(null)
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [noteText, setNoteText] = useState('')
@@ -131,7 +131,11 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
   const totalNoNote = reports.filter(r => !r.teacher_note).length
 
   // ── Report Detail ──
-  const ReportDetail = ({ report }: { report: Report }) => {
+  // 注意:這是「回傳 JSX 的函式」,不是 React 元件,所以下面用 renderReportDetail(report) 呼叫,
+  // 不能寫成 <ReportDetail />。原因:此函式定義在父元件內部,若當成元件使用,
+  // 每次父層 setState(例如編輯 Teacher Note 打字)都會產生新的函式參考,
+  // React 視為不同元件而整棵卸載重掛,導致 textarea 每打一字就失焦。
+  const renderReportDetail = (report: Report) => {
     const lesson = getLesson(report)
     const student = getStudent(report)
     const analysis = report.analysis_en ?? report.analysis_zh
@@ -148,7 +152,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <button
-              onClick={() => { if (!lesson) return; setReuploadTarget({ lessonId: lesson.id, lessonDate: lesson.date, studentName, reportId: report.id }) }}
+              onClick={() => { if (!lesson) return; setReuploadTarget({ lessonId: lesson.id, lessonDate: lesson.date, studentName, reportId: report.id, teacherNote: report.teacher_note ?? null }) }}
               className="text-[12px] px-3 py-1.5 rounded-xl font-medium transition hover:opacity-80"
               style={{ background: C.gold, color: '#fff' }}>
               Regenerate Report
@@ -450,7 +454,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           {/* Col 3: Report Detail */}
           <div className={`${mobileView === 'detail' ? 'flex' : 'hidden'} sm:flex flex-col flex-1`} style={{ minWidth: 0 }}>
             {selectedReport ? (
-              <ReportDetail report={selectedReport} />
+              renderReportDetail(selectedReport)
             ) : (
               <div className="hidden sm:flex items-center justify-center flex-1 text-sm" style={{ color: C.muted }}>← Select a report</div>
             )}
@@ -464,6 +468,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           lessonId={reuploadTarget.lessonId}
           lessonDate={reuploadTarget.lessonDate}
           studentName={reuploadTarget.studentName}
+          initialNote={reuploadTarget.teacherNote}
           teacherName={teacherName}
           existingReportId={reuploadTarget.reportId}
           onGenerated={() => setReuploadTarget(null)}

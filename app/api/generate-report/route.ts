@@ -289,9 +289,12 @@ ${transcript}
     );
 
     // 報告欄位（insert / update 共用）
+    // 注意:teacher_note 不放這裡。重新生成時若無條件覆蓋,
+    // 會把老師當初上傳時打的 note 洗成 null。改由 INSERT / UPDATE 分開處理:
+    // - INSERT(首次生成):直接寫入傳入的 note
+    // - UPDATE(重新生成):只有這次真的有帶 note 才更新,否則保留原本的
     const reportFields = {
       transcript_vtt: vttContent,
-      teacher_note: teacherNote ?? null,
       analysis_zh: report.analysis_zh,
       analysis_en: report.analysis_en,
       vocabulary: report.vocabulary,
@@ -308,9 +311,22 @@ ${transcript}
     if (existingReportId) {
       // 重新生成：就地更新同一份報告（保留 report id，學生的收藏 / 作答不受影響）
       reportId = existingReportId;
+
+      // teacher_note 只在這次真的有帶內容時才更新,避免重新生成 AI 內容時
+      // 把老師原本的 note 覆蓋掉。老師若要改 note,用詳情頁的 Edit 功能。
+      const hasNewNote =
+        typeof teacherNote === "string" && teacherNote.trim() !== "";
+      const updatePayload: Record<string, unknown> = {
+        ...reportFields,
+        updated_at: new Date().toISOString(),
+      };
+      if (hasNewNote) {
+        updatePayload.teacher_note = teacherNote;
+      }
+
       const { error: updateError } = await admin
         .from("lesson_reports")
-        .update({ ...reportFields, updated_at: new Date().toISOString() })
+        .update(updatePayload)
         .eq("id", existingReportId);
 
       if (updateError) {
@@ -334,6 +350,7 @@ ${transcript}
         id: reportId,
         lesson_id: lessonId,
         student_id: student.id,
+        teacher_note: teacherNote ?? null,
         ...reportFields,
       });
 
