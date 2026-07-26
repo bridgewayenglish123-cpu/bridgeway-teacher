@@ -40,7 +40,7 @@ interface Props {
 type Mode = "vtt" | "manual";
 type Step = "upload" | "vocab" | "confirm" | "generating" | "done" | "error";
 
-const MAX_VOCAB = 15;
+const MAX_VOCAB = 20;
 
 export function UploadReportModal({
   lessonId, studentName, lessonDate, teacherName,

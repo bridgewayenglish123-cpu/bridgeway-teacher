@@ -195,7 +195,7 @@ ${transcript}
 - errors 每一項用 examples 陣列（不是單數 example），列出課堂中所有出現的錯誤例句（只能是英文）
 - examples 陣列裡每個物件的鍵名固定為 original（錯誤原句）和 correction（正確版本），不可用其他鍵名
 - reflection_question 必須是語言輸出練習（造句、口說、寫作），絕對不能問課文情節
-- vocabulary 最少 6 個、最多 10 個；phrases 最少 4 個、最多 8 個
+- vocabulary 與 phrases 合計最多 20 個；其中 vocabulary 至少 6 個、phrases 至少 3 個。老師已確認詞彙清單時以清單為準,不受此上限限制
 
 嚴格輸出以下 JSON 格式，不加任何其他文字、不加 markdown：
 
