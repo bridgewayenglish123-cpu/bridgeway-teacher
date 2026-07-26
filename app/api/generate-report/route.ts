@@ -294,7 +294,10 @@ ${transcript}
     // - INSERT(首次生成):直接寫入傳入的 note
     // - UPDATE(重新生成):只有這次真的有帶 note 才更新,否則保留原本的
     const reportFields = {
-      transcript_vtt: vttContent,
+      // 不存逐字稿:它只是 AI 分析的原料,生成後就無用途(學生看不到,
+      // 重新生成也是靠前端重新上傳 VTT,不從這裡讀)。存了只會佔空間 —
+      // 每份約 69 kB,是報告本體的 8 倍。改存 null,大幅節省資料庫容量。
+      transcript_vtt: null,
       analysis_zh: report.analysis_zh,
       analysis_en: report.analysis_en,
       vocabulary: report.vocabulary,
