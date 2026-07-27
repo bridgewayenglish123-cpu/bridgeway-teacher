@@ -171,9 +171,39 @@ export function UploadReportModal({
         setCandidatePhrases(phrases);
         setWordReasons(wReasons);
         setPhraseReasons(pReasons);
-        const initWords = new Set<string>(words.slice(0, Math.min(words.length, MAX_VOCAB)));
-        const remaining = MAX_VOCAB - initWords.size;
-        const initPhrases = new Set<string>(phrases.slice(0, Math.max(0, remaining)));
+
+        // 智慧預選:按 reason 的教學信號強弱決定預選哪些,而非機械地填滿 20。
+        // 高信號(糾正/操練/學生提問/重複強調)代表這堂課的重點,預選;
+        // 單純「解釋過」信號較弱,不預選,交給老師判斷 —— 這樣也自然留出
+        // 空間讓老師手動補充,不會一開場就爆滿。
+        // 保底:若高信號項目太少(<6),依原順序補到 6 個,避免開場太空。
+        const HIGH_SIGNAL = new Set([
+          "teacher corrected", "teacher drilled", "student asked", "repeated emphasis",
+        ]);
+        const MIN_PRESELECT = 6;
+
+        const pickPreselect = (
+          items: string[],
+          reasons: Record<string, string>
+        ): string[] => {
+          const high = items.filter((it) => HIGH_SIGNAL.has(reasons[it]));
+          if (high.length >= MIN_PRESELECT) return high;
+          // 不足保底數:用高信號 + 其餘依序補齊
+          const rest = items.filter((it) => !HIGH_SIGNAL.has(reasons[it]));
+          return [...high, ...rest].slice(0, Math.max(MIN_PRESELECT, high.length));
+        };
+
+        // 先挑單字,再挑片語,合計不超過 MAX_VOCAB
+        let preWords = pickPreselect(words, wReasons);
+        let presPhrases = pickPreselect(phrases, pReasons);
+
+        // 合計裁切到 20:優先保留單字,片語填剩餘空間
+        if (preWords.length > MAX_VOCAB) preWords = preWords.slice(0, MAX_VOCAB);
+        const phraseRoom = Math.max(0, MAX_VOCAB - preWords.length);
+        presPhrases = presPhrases.slice(0, phraseRoom);
+
+        const initWords = new Set<string>(preWords);
+        const initPhrases = new Set<string>(presPhrases);
         setSelectedWords(initWords);
         setSelectedPhrases(initPhrases);
         setStep("vocab");
