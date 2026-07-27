@@ -33,6 +33,7 @@ export default async function ReportsPage() {
     .select(`
       id, created_at, milestone, analysis_zh, analysis_en,
       vocabulary, phrases, strengths, errors, next_focus, teacher_note,
+      comparison, hidden_gem, next_challenge, parent_summary,
       lesson:lesson_id (
         id, date, time, duration,
         student:students!student_id ( zh_name, en_name )
@@ -42,10 +43,28 @@ export default async function ReportsPage() {
     .order('created_at', { ascending: false })
     .limit(100)
 
+  // 撈學生的寫作作答與批改(reflection),依 lesson_report_id 對應。
+  // 老師要即時看到學生寫了什麼、AI 如何批改,所以一併帶入。
+  const reportIds = (reports ?? []).map(r => r.id)
+  const { data: reflections } = await admin
+    .from('reflection_responses')
+    .select('lesson_report_id, question_zh, question_en, response, feedback')
+    .in('lesson_report_id', reportIds.length > 0 ? reportIds : ['none'])
+
+  const reflectionByReport: Record<string, any> = {}
+  for (const rf of reflections ?? []) {
+    reflectionByReport[rf.lesson_report_id] = rf
+  }
+
+  const reportsWithReflection = (reports ?? []).map(r => ({
+    ...r,
+    reflection: reflectionByReport[r.id] ?? null,
+  }))
+
   return (
     <>
       <Nav teacherName={teacher.teacher_name} />
-      <ReportsClient reports={(reports ?? []) as any[]} teacherName={teacher.teacher_name} />
+      <ReportsClient reports={reportsWithReflection as any[]} teacherName={teacher.teacher_name} />
     </>
   )
 }

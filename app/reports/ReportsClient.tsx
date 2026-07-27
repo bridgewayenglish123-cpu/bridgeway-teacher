@@ -15,6 +15,16 @@ type Report = {
   strengths: { zh: string; en?: string }[] | null
   errors: { pattern?: string; pattern_en?: string; pattern_zh?: string; count?: number; example?: string; correction?: string; tip_en?: string }[] | null
   next_focus: string | null
+  comparison: { summary_zh?: string; summary_en?: string } | null
+  hidden_gem: string | null
+  next_challenge: string | null
+  parent_summary: string | null
+  reflection: {
+    question_zh?: string | null
+    question_en?: string | null
+    response?: string | null
+    feedback?: string | null
+  } | null
   lesson: { id: string; date: string; time: string | null; duration: number | null; student: { zh_name: string; en_name: string | null } | null } | null
 }
 
@@ -256,6 +266,85 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               </div>
             </div>
           )}
+          {/* Phrases — 與 Vocabulary 同級,老師需審核 */}
+          {report.phrases && report.phrases.length > 0 && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Phrases ({report.phrases.length})</div>
+              <div className="grid grid-cols-2 gap-2">
+                {report.phrases.map((p: any, i: number) => (
+                  <div key={i} className="rounded-xl px-3 py-2" style={{ background: '#F5F0FF' }}>
+                    <div className="font-semibold text-[13px]" style={{ color: C.navy }}>{p.phrase}</div>
+                    {(p.usage_en || p.definition_en) && <div className="text-[11px] mt-0.5" style={{ color: C.muted }}>{p.usage_en || p.definition_en}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Comparison — 與上堂對比 */}
+          {report.comparison?.summary_en && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Compared to Last Lesson</div>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.comparison.summary_en}</p>
+            </div>
+          )}
+
+          {/* Hidden Gem — AI 挑的高光時刻 */}
+          {report.hidden_gem && (
+            <div className="rounded-xl p-4" style={{ background: '#FBF8EF', borderLeft: '3px solid ' + C.gold }}>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.gold }}>✦ What the Teacher Noticed</div>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.hidden_gem}</p>
+            </div>
+          )}
+
+          {/* Next Challenge */}
+          {report.next_challenge && (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Next Challenge</div>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.next_challenge}</p>
+            </div>
+          )}
+
+          {/* Parent Summary — 要給家長,老師最需把關 */}
+          {report.parent_summary && (
+            <div className="rounded-xl p-4" style={{ background: '#EEF2FF' }}>
+              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: '#3730A3' }}>Parent Summary</div>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.parent_summary}</p>
+            </div>
+          )}
+
+          {/* Reflection — 題目 + 學生作答 + AI 批改,老師即時檢視 */}
+          {report.reflection && (report.reflection.question_en || report.reflection.response) && (
+            <div className="rounded-xl p-4 space-y-3" style={{ background: '#F0FDF4', border: '1px solid rgba(22,101,52,0.15)' }}>
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: '#166534' }}>Writing Practice</div>
+              {report.reflection.question_en && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide mb-1" style={{ color: C.muted }}>Question</div>
+                  <p className="text-[13px] leading-[1.6]" style={{ color: C.navy }}>{report.reflection.question_en}</p>
+                </div>
+              )}
+              {report.reflection.response ? (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide mb-1" style={{ color: C.muted }}>Student's Answer</div>
+                  <p className="text-[13px] leading-[1.6] whitespace-pre-wrap" style={{ color: C.navy }}>{report.reflection.response}</p>
+                </div>
+              ) : (
+                <p className="text-[12px]" style={{ color: C.muted }}>Student hasn't answered yet.</p>
+              )}
+              {report.reflection.feedback && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide mb-1" style={{ color: C.muted }}>AI Feedback</div>
+                  <p className="text-[12px] leading-[1.6]" style={{ color: C.muted }}>{(() => {
+                    try {
+                      const fb = typeof report.reflection.feedback === 'string' ? JSON.parse(report.reflection.feedback) : report.reflection.feedback;
+                      return (fb.strength_en || fb.strength || '') + (fb.corrected ? ' → ' + fb.corrected : '');
+                    } catch { return 'Feedback recorded.'; }
+                  })()}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {report.next_focus && (
             <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-3" style={{ color: C.gold }}>Next Lesson Focus</div>
