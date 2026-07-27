@@ -100,6 +100,9 @@ export function UploadReportModal({
   };
   const totalSelected = selectedWords.size + selectedPhrases.size + extraWords.length + extraPhrases.length;
   const atMax = totalSelected >= MAX_VOCAB;
+  // 嘗試超過上限時的短暫提示(勾選或新增都會用到)
+  const [limitHint, setLimitHint] = useState(false);
+  const flashLimit = () => { setLimitHint(true); setTimeout(() => setLimitHint(false), 2500); };
 
   // ── Spell check ──
   const checkSpelling = async (word: string, setter: (s: string) => void) => {
@@ -184,7 +187,7 @@ export function UploadReportModal({
     setSelectedWords(prev => {
       const next = new Set(prev);
       if (next.has(w)) { next.delete(w); return next; }
-      if (totalSelected >= MAX_VOCAB) return prev;
+      if (totalSelected >= MAX_VOCAB) { flashLimit(); return prev; }
       next.add(w); return next;
     });
   };
@@ -192,7 +195,7 @@ export function UploadReportModal({
     setSelectedPhrases(prev => {
       const next = new Set(prev);
       if (next.has(p)) { next.delete(p); return next; }
-      if (totalSelected >= MAX_VOCAB) return prev;
+      if (totalSelected >= MAX_VOCAB) { flashLimit(); return prev; }
       next.add(p); return next;
     });
   };
@@ -338,7 +341,11 @@ export function UploadReportModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
       style={{ background: "rgba(26,34,54,0.55)" }}
-      onClick={e => { if (e.target === e.currentTarget && step !== "generating") onClose(); }}>
+      onClick={e => {
+        // 只有在最初的 upload 階段點外面才關閉。進入 vocab / confirm 後
+        // 已經花了工在選字,誤點背景不該讓成果全失 —— 需按右上角 × 明確關閉。
+        if (e.target === e.currentTarget && step === "upload") onClose();
+      }}>
       <div className="w-full sm:max-w-lg rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[90vh] overflow-hidden">
 
         {/* Header */}
@@ -348,7 +355,16 @@ export function UploadReportModal({
             <div className="text-[12px] mt-0.5" style={{ color: C.muted }}>{lessonDate} · {teacherName}</div>
           </div>
           {step !== "generating" && (
-            <button onClick={onClose} className="text-[20px] leading-none" style={{ color: C.muted }}>×</button>
+            <button
+              onClick={() => {
+                // 選字/確認階段已投入工,關閉前二次確認,避免誤觸前功盡棄
+                if ((step === "vocab" || step === "confirm")) {
+                  if (window.confirm("尚未生成報告,關閉將遺失已選的詞彙。確定關閉?")) onClose();
+                } else {
+                  onClose();
+                }
+              }}
+              className="text-[20px] leading-none" style={{ color: C.muted }}>×</button>
           )}
         </div>
 
@@ -505,7 +521,8 @@ export function UploadReportModal({
                 </div>
                 <div className="text-[12px] font-medium px-2.5 py-1 rounded-full"
                   style={{ background: atMax ? "#FEF3C7" : "#F0EDE6", color: atMax ? "#92400E" : C.muted }}>
-                  {totalSelected} / {MAX_VOCAB}
+                  <span style={{ color: atMax ? "#DC2626" : undefined, fontWeight: atMax ? 700 : undefined }}>{totalSelected} / {MAX_VOCAB}</span>
+                  {limitHint && <span className="ml-2 text-[11px]" style={{ color: "#DC2626" }}>已達上限,請先移除一個</span>}
                 </div>
               </div>
 
@@ -575,9 +592,11 @@ export function UploadReportModal({
               )}
 
               {/* Manual add */}
-              {!atMax && (
+              {(
                 <div className="border-t pt-3 space-y-2" style={{ borderColor: C.line }}>
-                  <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: C.muted }}>Add manually ({MAX_VOCAB - totalSelected} slots left)</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: atMax ? "#DC2626" : C.muted }}>
+                    {atMax ? `已達上限 ${MAX_VOCAB}，請先移除項目再新增` : `Add manually (${MAX_VOCAB - totalSelected} slots left)`}
+                  </div>
                   <div>
                     <div className="flex gap-2">
                       <input type="text" value={newWord}
@@ -644,11 +663,7 @@ export function UploadReportModal({
                   )}
                 </div>
               )}
-              {atMax && (
-                <div className="text-[12px] rounded-lg px-3 py-2" style={{ background: "#FEF3C7", color: "#92400E" }}>
-                  Maximum {MAX_VOCAB} items selected.
-                </div>
-              )}
+
             </div>
           )}
 
@@ -659,7 +674,8 @@ export function UploadReportModal({
                 <div className="text-[13px] font-semibold" style={{ color: C.navy }}>Add vocabulary from this lesson</div>
                 <div className="text-[12px] font-medium px-2.5 py-1 rounded-full"
                   style={{ background: atMax ? "#FEF3C7" : "#F0EDE6", color: atMax ? "#92400E" : C.muted }}>
-                  {totalSelected} / {MAX_VOCAB}
+                  <span style={{ color: atMax ? "#DC2626" : undefined, fontWeight: atMax ? 700 : undefined }}>{totalSelected} / {MAX_VOCAB}</span>
+                  {limitHint && <span className="ml-2 text-[11px]" style={{ color: "#DC2626" }}>已達上限,請先移除一個</span>}
                 </div>
               </div>
 
@@ -740,11 +756,7 @@ export function UploadReportModal({
                   ))}
                 </div>
               )}
-              {atMax && (
-                <div className="text-[12px] rounded-lg px-3 py-2" style={{ background: "#FEF3C7", color: "#92400E" }}>
-                  Maximum {MAX_VOCAB} items selected.
-                </div>
-              )}
+
             </div>
           )}
 
@@ -776,7 +788,7 @@ export function UploadReportModal({
                 </>)}
                 <div className="flex justify-between text-[13px]">
                   <span style={{ color: C.muted }}>Total vocabulary</span>
-                  <span className="font-bold" style={{ color: C.gold }}>{totalSelected} / {MAX_VOCAB}</span>
+                  <span className="font-bold" style={{ color: atMax ? "#DC2626" : C.gold }}>{totalSelected} / {MAX_VOCAB}</span>
                 </div>
               </div>
 
