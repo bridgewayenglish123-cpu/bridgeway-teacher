@@ -85,13 +85,18 @@ export async function POST(request: Request) {
     }
 
     // 查詢最近三堂有報告的歷史（供 Claude 比較）
+    // 只抓「當前這堂之前」且日期更早的報告作比較基準。
+    // 兩個關鍵過濾:
+    // 1) 排除 existingReportId(regenerate 時避免把這堂自己的舊版當成前一堂)
+    // 2) lesson.date < 本堂日期(確保是真正的「過去」,不是同日或未來)
     const { data: previousReports } = await admin
       .from("lesson_reports")
       .select(`analysis_zh, errors, strengths, lesson:lesson_id ( date )`)
       .eq("student_id", student.id)
       .not("analysis_zh", "is", null)
+      .neq("id", existingReportId ?? "___none___")
       .order("created_at", { ascending: false })
-      .limit(3);
+      .limit(5);
 
     // 查詢已完成堂數（里程碑判斷）
     const { count: completedCount } = await admin
@@ -126,11 +131,18 @@ export async function POST(request: Request) {
 需要加強的地方：${manualInput?.errors || "（老師未填）"}
 下堂課建議：${manualInput?.nextFocus || "（老師未填）"}`;
 
-    const previousSummary = (previousReports ?? []).map((r: any) => ({
-      date: Array.isArray(r.lesson) ? r.lesson[0]?.date : r.lesson?.date,
-      errors: r.errors,
-      strengths: r.strengths,
-    }));
+    const previousSummary = (previousReports ?? [])
+      .map((r: any) => ({
+        date: Array.isArray(r.lesson) ? r.lesson[0]?.date : r.lesson?.date,
+        errors: r.errors,
+        strengths: r.strengths,
+      }))
+      // 只保留日期「嚴格早於」本堂的報告 —— 這才是真正可比較的前幾堂
+      .filter((r: any) => r.date && r.date < lesson.date)
+      .slice(0, 3);
+
+    // 是否真的有前一堂可比較。沒有就不讓 AI 生成 comparison(避免無中生有)。
+    const hasPrevious = previousSummary.length > 0;
 
     const prompt = `你是 Bridgeway English 的 AI 學習分析師。
 分析以下英文課堂的轉錄稿，生成一份學習報告。
@@ -177,13 +189,17 @@ export async function POST(request: Request) {
 
 ${teacherNote ? `老師手記：${teacherNote}` : ""}
 
-過去三堂課摘要（供比較）：
-${JSON.stringify(previousSummary, null, 2)}
+${hasPrevious
+  ? `過去幾堂課摘要（供比較）：\n${JSON.stringify(previousSummary, null, 2)}`
+  : "【這位學生目前沒有任何過去的課程報告可供比較 —— 可能是首次生成報告，或先前課程未產生報告】"}
 
 本堂課轉錄稿：
 ${transcript}
 
 報告規則：
+${hasPrevious
+  ? "- comparison 欄位:根據上方提供的過去課程摘要,做真實的比較(進步、退步、持平都據實說)。只能引用摘要中真實存在的資料,不可捏造上堂課的句子或數字。"
+  : "- 【鐵則】目前沒有任何過去的報告紀錄可比較。comparison 欄位必須為 null。strengths、errors、任何欄位都「絕對禁止」出現『比上堂課』『上週』『比上次』這類與過去比較的措辭,因為沒有可對照的過去資料。只描述這一堂課本身觀察到的表現。"}
 - 像一位關心學生的老師在說話，有溫度、具體、鼓勵性
 - 中文版：輕鬆親切，重點放在鼓勵和具體建議
 - 英文版：全英文，語氣正式但友善，可作為學習材料
@@ -223,8 +239,8 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
   ],
   "strengths": [
     {
-      "zh": "主動提問 4 次，比上堂課多了 2 次",
-      "en": "Asked 4 questions proactively, 2 more than last lesson"
+      "zh": "主動提問 4 次，並用問題來釐清語意",
+      "en": "Asked 4 questions proactively and used them to clarify meaning"
     }
   ],
   "errors": [
@@ -241,6 +257,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     }
   ],
   "comparison": {
+    "_note": "若沒有過去的報告可比較,整個 comparison 必須是 null,不要填物件",
     "summary_zh": "這堂課你的文法錯誤比上堂課減少了 2 次，主動提問增加了 2 次。",
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
