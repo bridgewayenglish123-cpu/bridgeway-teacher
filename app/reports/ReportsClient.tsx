@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { C } from '@/lib/constants'
 import { UploadReportModal } from '@/components/UploadReportModal'
 
@@ -36,6 +36,8 @@ const REPORTS_PAGE_SIZE = 10
 
 export function ReportsClient({ reports, teacherName }: { reports: Report[]; teacherName: string }) {
   const router = useRouter()
+  // 記錄本次 modal 開啟期間是否真的重新生成過報告,用來決定關閉時要不要刷新資料
+  const regeneratedRef = useRef(false)
   const [mode, setMode] = useState<DisplayMode>('overview')
   const [search, setSearch] = useState('')
   const [filterNote, setFilterNote] = useState<'all' | 'no-note'>('all')
@@ -563,13 +565,22 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           teacherName={teacherName}
           existingReportId={reuploadTarget.reportId}
           onGenerated={() => {
-            setReuploadTarget(null)
-            // regenerate 成功後重新拉取 server 資料,並清掉目前選中的舊報告物件,
-            // 讓老師重新點開時看到最新內容(否則 selectedReport 仍指向舊資料)。
-            setSelectedReport(null)
-            router.refresh()
+            // 生成成功時不立刻關 modal、也不立刻 refresh。
+            // modal 停在自己的 done 畫面(有 Close 按鈕)顯示成功。
+            // 標記這次有生成過,供 onClose 決定要不要刷新資料。
+            regeneratedRef.current = true
           }}
-          onClose={() => setReuploadTarget(null)}
+          onClose={() => {
+            const didRegen = regeneratedRef.current
+            regeneratedRef.current = false
+            setReuploadTarget(null)
+            // 只有真的重新生成過才刷新。此時老師已看完 done 畫面才按 Close,
+            // 資料庫寫入早已完成,router.refresh() 時序穩定,不會抓到舊資料。
+            if (didRegen) {
+              setSelectedReport(null)
+              router.refresh()
+            }
+          }}
         />
       )}
     </div>
