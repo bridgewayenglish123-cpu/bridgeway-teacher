@@ -1,4 +1,5 @@
 'use client'
+import { useRouter } from 'next/navigation'
 import { useState, useMemo, useEffect } from 'react'
 import { C } from '@/lib/constants'
 import { UploadReportModal } from '@/components/UploadReportModal'
@@ -34,6 +35,7 @@ type DisplayMode = 'overview' | 'by-student'
 const REPORTS_PAGE_SIZE = 10
 
 export function ReportsClient({ reports, teacherName }: { reports: Report[]; teacherName: string }) {
+  const router = useRouter()
   const [mode, setMode] = useState<DisplayMode>('overview')
   const [search, setSearch] = useState('')
   const [filterNote, setFilterNote] = useState<'all' | 'no-note'>('all')
@@ -560,7 +562,13 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           initialNote={reuploadTarget.teacherNote}
           teacherName={teacherName}
           existingReportId={reuploadTarget.reportId}
-          onGenerated={() => setReuploadTarget(null)}
+          onGenerated={() => {
+            setReuploadTarget(null)
+            // regenerate 成功後重新拉取 server 資料,並清掉目前選中的舊報告物件,
+            // 讓老師重新點開時看到最新內容(否則 selectedReport 仍指向舊資料)。
+            setSelectedReport(null)
+            router.refresh()
+          }}
           onClose={() => setReuploadTarget(null)}
         />
       )}

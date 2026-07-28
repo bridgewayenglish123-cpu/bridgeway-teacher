@@ -189,14 +189,14 @@ ${transcript}
 - 英文版：全英文，語氣正式但友善，可作為學習材料
 - 禁止使用 emoji
 - 禁止空泛稱讚（如「你表現很好」），只說具體觀察
-- 單字和片語：${confirmedVocab ? `老師已確認的詞彙清單如下，請直接使用，不要自行增減。單字：${(confirmedVocab.words || []).join(", ") || "（無）"}。片語：${(confirmedVocab.phrases || []).join(", ") || "（無）"}` : "只抓老師特別解釋過、學生問過、或課堂重點強調的詞彙，不設數量上限"}
+${confirmedVocab ? `- 【最高優先·詞彙鎖定】vocabulary 陣列必須「完全等於」以下老師指定的單字，一字不多一字不少，順序可自訂但內容不可增刪替換：${(confirmedVocab.words || []).join(", ") || "（無）"}。phrases 陣列必須「完全等於」以下老師指定的片語：${(confirmedVocab.phrases || []).join(", ") || "（無）"}。這是硬性規定，即使你認為課堂有其他重要詞彙，也絕對不可自行加入或移除。你的工作只是為這些指定詞彙生成定義與例句，不是重新挑選詞彙。` : "- 單字和片語：只抓老師特別解釋過、學生問過、或課堂重點強調的詞彙，不設數量上限"}
 ${confirmedVocab && ((confirmedVocab.forcedWords || []).length > 0 || (confirmedVocab.forcedPhrases || []).length > 0) ? `- 【拼寫存疑字】以下詞彙拼寫檢查查無結果，但老師仍堅持加入：${[...(confirmedVocab.forcedWords || []), ...(confirmedVocab.forcedPhrases || [])].join(", ")}。請對這些字特別謹慎：先判斷它是否為有效英文（可能是專有名詞、品牌、新詞、專業術語，這些都正常處理即可）；若判斷後確定無法辨識、可能是拼寫錯誤，definition_zh 與 definition_en 請誠實寫「此字可能拼寫有誤，建議老師確認」，example_en/example_zh 留簡短提示即可，切勿憑空編造定義或造句。` : ""}
 - 錯誤模式要列出「所有」發生的例句，不只是代表性的一句
 - errors 的 pattern 必須同時提供 pattern_zh（中文名稱）和 pattern_en（英文名稱）
 - errors 每一項用 examples 陣列（不是單數 example），列出課堂中所有出現的錯誤例句（只能是英文）
 - examples 陣列裡每個物件的鍵名固定為 original（錯誤原句）和 correction（正確版本），不可用其他鍵名
 - reflection_question 必須是語言輸出練習（造句、口說、寫作），絕對不能問課文情節
-- vocabulary 與 phrases 合計最多 20 個；其中 vocabulary 至少 6 個、phrases 至少 3 個。老師已確認詞彙清單時以清單為準,不受此上限限制
+${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 vocabulary 至少 6 個、phrases 至少 3 個"}
 
 嚴格輸出以下 JSON 格式，不加任何其他文字、不加 markdown：
 
