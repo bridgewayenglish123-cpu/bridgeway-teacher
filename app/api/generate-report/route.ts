@@ -261,9 +261,9 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "summary_zh": "這堂課你的文法錯誤比上堂課減少了 2 次，主動提問增加了 2 次。",
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
-  "hidden_gem": "A specific moment from today's lesson that the student might not have noticed — something genuinely impressive or meaningful. Write in warm, story-like Chinese (2-3 sentences). IMPORTANT: Only include this if there is a truly remarkable moment worth highlighting. If nothing stands out, return null.",
-  "next_challenge": "A specific, personal challenge for the student to try before next lesson. NOT course content — a language challenge targeting their specific weakness. Write in Chinese, 1-2 sentences, with a hint of excitement. Example: '下次試試看：當你想說「因為」的時候，你能不能不用 because？看你能想出幾種說法。' Adjust difficulty and tone based on learner_type.",
-  "parent_summary": "ONLY include if learner_type is 'Young Learner'. A warm, informative summary for parents (2-3 sentences in Traditional Chinese). Cover: what the child learned today, one specific moment of progress the parent would be proud of, and one thing to encourage at home. If learner_type is NOT 'Young Learner', return null.",
+  "hidden_gem": "A specific moment from today's lesson that the student might not have noticed — something genuinely impressive or meaningful. Write in warm, story-like Chinese (2-3 sentences). 【依 learner_type】Young Learner:必須提供,絕不可為 null —— 一定要從課堂中找出一個具體可愛的亮點讓孩子感覺被看見。Junior:必須提供,用較酷的語氣。Adult:有真正值得說的才放,沒有就 null。",
+  "next_challenge": "A specific, personal challenge for the student to try before next lesson. NOT course content — a language challenge targeting their specific weakness. Write in Chinese, 1-2 sentences, with a hint of excitement. Example: '下次試試看：當你想說「因為」的時候，你能不能不用 because？看你能想出幾種說法。' Adjust difficulty and tone based on learner_type. 【依 learner_type】Young Learner 必須提供,絕不可為 null,用最簡單可愛、像遊戲挑戰的語氣。Junior/Adult 也盡量提供。",
+  "parent_summary": "【依 learner_type】僅當 learner_type 為 'Young Learner' 時提供,且此時「必須」提供、絕不可為 null。給家長看的溫暖摘要(2-3 句繁體中文):今天孩子學了什麼、一個讓家長驕傲的具體進步時刻、一個可以在家鼓勵練習的方向。孩子的報告不顯示錯誤診斷,所以這裡要讓家長了解孩子需要加強的地方(用正向、建設性的措辭)。若 learner_type 不是 'Young Learner',回 null。",
   "analysis_zh": {
     "headline": "Annie，你這堂課真的有進步。",
     "body": "具體、有溫度的中文分析，2-4句。"
