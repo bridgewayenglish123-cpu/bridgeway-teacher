@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { SignOutButton } from '@/components/SignOutButton'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Nav } from '@/components/layout/Nav'
@@ -29,7 +30,8 @@ export default async function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
           <p className="text-lg mb-2" style={{ color: '#1A3A5C' }}>Teacher account not found</p>
-          <p className="text-sm" style={{ color: '#6B7B8E' }}>Please contact your Bridgeway administrator.</p>
+          <p className="text-sm" style={{ color: '#6B7B8E' }}>This login isn\'t linked to a teacher account. Sign out and try a different account, or contact your Bridgeway administrator.</p>
+          <SignOutButton label="Sign out and try again" />
         </div>
       </div>
     )
