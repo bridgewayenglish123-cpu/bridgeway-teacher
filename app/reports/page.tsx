@@ -36,7 +36,7 @@ export default async function ReportsPage() {
       comparison, hidden_gem, next_challenge, parent_summary,
       lesson:lesson_id (
         id, date, time, duration,
-        student:students!student_id ( zh_name, en_name )
+        student:students!student_id ( zh_name, en_name, learner_type )
       )
     `)
     .in('lesson_id', myLessonIds.length > 0 ? myLessonIds : ['none'])

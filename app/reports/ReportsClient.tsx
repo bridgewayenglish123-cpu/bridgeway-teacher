@@ -26,7 +26,7 @@ type Report = {
     response?: string | null
     feedback?: string | null
   } | null
-  lesson: { id: string; date: string; time: string | null; duration: number | null; student: { zh_name: string; en_name: string | null } | null } | null
+  lesson: { id: string; date: string; time: string | null; duration: number | null; student: { zh_name: string; en_name: string | null; learner_type?: string | null } | null } | null
 }
 
 type View = 'students' | 'reports' | 'detail'
@@ -162,6 +162,7 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
     const analysis = report.analysis_en ?? report.analysis_zh
     const lessonId = lesson?.id ?? ''
     const studentName = student?.en_name ?? student?.zh_name ?? 'Student'
+    const isYoungLearner = student?.learner_type === 'Young Learner'
 
     return (
       <div className="h-full overflow-y-auto">
@@ -232,6 +233,22 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
               <p className="text-[12px]" style={{ color: C.muted }}>No note yet. Click to add one.</p>
             )}
           </div>
+
+          {/* Young Learner 可見範圍說明:只有兒童版學生看到的內容較少,
+              老師需知道孩子/家長各看到什麼。其他版型師生所見一致,不顯示。 */}
+          {isYoungLearner && (
+            <div className="rounded-xl p-4 text-[12px] leading-[1.7]"
+              style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)', color: C.navy }}>
+              <div className="font-semibold mb-1.5" style={{ color: C.gold }}>Young Learner report — who sees what</div>
+              <div style={{ color: C.mid }}>
+                <span style={{ color: C.navy, fontWeight: 600 }}>Student sees:</span> Hidden Gem, Vocabulary, Phrases, Writing Practice, Next Challenge.
+                <br />
+                <span style={{ color: C.navy, fontWeight: 600 }}>Teacher only:</span> Summary, What They Did Well, Areas to Improve, Next Lesson Focus.
+                <br />
+                <span style={{ color: C.navy, fontWeight: 600 }}>Parents only:</span> Parent Summary.
+              </div>
+            </div>
+          )}
 
           {analysis?.body && (
             <div>
