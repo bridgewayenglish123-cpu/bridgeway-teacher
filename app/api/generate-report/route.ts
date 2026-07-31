@@ -338,6 +338,11 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
       errors: report.errors,
       comparison: report.comparison,
       next_focus: report.next_focus,
+      // 這三個欄位 AI 有生成,但先前 reportFields 漏了它們,導致永遠寫不進資料庫、
+      // 一直是 null(Young Learner 的 hidden_gem/parent_summary/next_challenge 尤其明顯)。
+      hidden_gem: report.hidden_gem ?? null,
+      next_challenge: report.next_challenge ?? null,
+      parent_summary: report.parent_summary ?? null,
       milestone,
     };
 
