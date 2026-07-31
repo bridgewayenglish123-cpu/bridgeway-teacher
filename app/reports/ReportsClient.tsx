@@ -17,9 +17,9 @@ type Report = {
   errors: { pattern?: string; pattern_en?: string; pattern_zh?: string; count?: number; example?: string; correction?: string; tip_en?: string }[] | null
   next_focus: string | null
   comparison: { summary_zh?: string; summary_en?: string } | null
-  hidden_gem: string | null
-  next_challenge: string | null
-  parent_summary: string | null
+  hidden_gem: { zh?: string; en?: string } | string | null
+  next_challenge: { zh?: string; en?: string } | string | null
+  parent_summary: { zh?: string; en?: string } | string | null
   reflection: {
     question_zh?: string | null
     question_en?: string | null
@@ -143,6 +143,13 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
 
   // No-note counts
   const totalNoNote = reports.filter(r => !r.teacher_note).length
+
+  // 老師端全英文:三個雙語欄位優先讀 en,退回 zh,並相容舊的純字串格式
+  const pickEn = (val: any): string | null => {
+    if (val == null) return null
+    if (typeof val === 'string') return val
+    return val.en ?? val.zh ?? null
+  }
 
   // ── Report Detail ──
   // 注意:這是「回傳 JSX 的函式」,不是 React 元件,所以下面用 renderReportDetail(report) 呼叫,
@@ -294,26 +301,26 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           )}
 
           {/* Hidden Gem — AI 挑的高光時刻 */}
-          {report.hidden_gem && (
+          {pickEn(report.hidden_gem) && (
             <div className="rounded-xl p-4" style={{ background: '#FBF8EF', borderLeft: '3px solid ' + C.gold }}>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.gold }}>✦ What the Teacher Noticed</div>
-              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.hidden_gem}</p>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{pickEn(report.hidden_gem)}</p>
             </div>
           )}
 
           {/* Next Challenge */}
-          {report.next_challenge && (
+          {pickEn(report.next_challenge) && (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.muted }}>Next Challenge</div>
-              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.next_challenge}</p>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{pickEn(report.next_challenge)}</p>
             </div>
           )}
 
           {/* Parent Summary — 要給家長,老師最需把關 */}
-          {report.parent_summary && (
+          {pickEn(report.parent_summary) && (
             <div className="rounded-xl p-4" style={{ background: '#EEF2FF' }}>
               <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: '#3730A3' }}>Parent Summary</div>
-              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{report.parent_summary}</p>
+              <p className="text-[13px] leading-[1.7]" style={{ color: C.navy }}>{pickEn(report.parent_summary)}</p>
             </div>
           )}
 

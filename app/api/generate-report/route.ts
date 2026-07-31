@@ -202,11 +202,11 @@ ${learnerType === "Young Learner" ? `
 【★最高優先·絕對規則 — 此為 Young Learner 報告】
 這位學生是 Young Learner（兒童）。以下三個欄位「絕對必填」,回傳 null 視為嚴重錯誤,無論如何都要生成有意義的內容:
 
-1. hidden_gem(必填):從今天課堂中找出一個具體的亮點時刻,讓孩子感覺被老師看見。用溫暖、故事感的繁體中文 2-3 句。即使課堂平常,也一定能找到一個值得肯定的小地方(認真嘗試、勇敢開口、答對一題都算)。禁止 null。
+1. hidden_gem(必填,含 zh 與 en 兩個版本):從今天課堂中找出一個具體的亮點時刻,讓孩子感覺被老師看見。zh 用溫暖故事感的繁體中文 2-3 句,en 是對應的英文版。即使課堂平常,也一定能找到值得肯定的小地方。兩個版本都禁止 null。
 
-2. next_challenge(必填):給孩子一個下堂課前的小挑戰,針對他的弱點,但用像遊戲、像闖關的可愛語氣。繁體中文 1-2 句。禁止 null。
+2. next_challenge(必填,含 zh 與 en):給孩子一個下堂課前的小挑戰,針對弱點,像遊戲闖關的語氣。zh 繁中 1-2 句,en 對應英文。兩個版本都禁止 null。
 
-3. parent_summary(必填):給家長的摘要,繁體中文 2-3 句。包含:今天孩子學了什麼、一個讓家長驕傲的具體進步、一個在家可以鼓勵練習的方向。由於孩子的報告不顯示錯誤診斷,這裡要讓家長了解孩子需要加強之處(用正向建設性措辭)。禁止 null。
+3. parent_summary(必填,含 zh 與 en):給家長的摘要。包含今天學了什麼、一個驕傲的進步、一個在家鼓勵的方向、需加強處(正向措辭)。zh 繁中 2-3 句,en 對應英文。兩個版本都禁止 null。
 
 這三個欄位是 Young Learner 報告的核心,比任何其他規則都優先。生成前務必再次檢查:這三個欄位都有實際內容了嗎?
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -275,9 +275,21 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "summary_zh": "這堂課你的文法錯誤比上堂課減少了 2 次，主動提問增加了 2 次。",
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
-  "hidden_gem": "A specific moment from today's lesson that the student might not have noticed — something genuinely impressive or meaningful. Write in warm, story-like Chinese (2-3 sentences). 【依 learner_type】Young Learner:必須提供,絕不可為 null —— 一定要從課堂中找出一個具體可愛的亮點讓孩子感覺被看見。Junior:必須提供,用較酷的語氣。Adult:有真正值得說的才放,沒有就 null。",
-  "next_challenge": "A specific, personal challenge for the student to try before next lesson. NOT course content — a language challenge targeting their specific weakness. Write in Chinese, 1-2 sentences, with a hint of excitement. Example: '下次試試看：當你想說「因為」的時候，你能不能不用 because？看你能想出幾種說法。' Adjust difficulty and tone based on learner_type. 【依 learner_type】Young Learner 必須提供,絕不可為 null,用最簡單可愛、像遊戲挑戰的語氣。Junior/Adult 也盡量提供。",
-  "parent_summary": "【依 learner_type】僅當 learner_type 為 'Young Learner' 時提供,且此時「必須」提供、絕不可為 null。給家長看的溫暖摘要(2-3 句繁體中文):今天孩子學了什麼、一個讓家長驕傲的具體進步時刻、一個可以在家鼓勵練習的方向。孩子的報告不顯示錯誤診斷,所以這裡要讓家長了解孩子需要加強的地方(用正向、建設性的措辭)。若 learner_type 不是 'Young Learner',回 null。",
+  "hidden_gem": {
+    "_note": "一個今天課堂中的具體亮點時刻。Young Learner/Junior 必填,Adult 沒有值得說的可整個為 null。zh 與 en 都要提供。",
+    "zh": "溫暖、故事感的繁體中文 2-3 句",
+    "en": "The same moment written warmly in English, 2-3 sentences"
+  },
+  "next_challenge": {
+    "_note": "下堂課前的個人小挑戰,針對弱點,像遊戲闖關的語氣。Young Learner 必填。zh 與 en 都要提供。",
+    "zh": "繁體中文 1-2 句,帶點期待感",
+    "en": "The same challenge in English, 1-2 sentences, encouraging tone"
+  },
+  "parent_summary": {
+    "_note": "僅 Young Learner 提供且必填,其他類型整個為 null。給家長的摘要:今天學了什麼、一個驕傲的進步、一個在家鼓勵的方向、需加強處(正向措辭)。zh 與 en 都要提供。",
+    "zh": "繁體中文 2-3 句",
+    "en": "The same summary for parents in English, 2-3 sentences"
+  },
   "analysis_zh": {
     "headline": "Annie，你這堂課真的有進步。",
     "body": "具體、有溫度的中文分析，2-4句。"
