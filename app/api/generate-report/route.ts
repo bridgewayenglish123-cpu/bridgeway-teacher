@@ -325,6 +325,16 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
 
     const report = JSON.parse(jsonText);
 
+    // 診斷:印出 AI 對三個 Young Learner 核心欄位的原始回傳,
+    // 用來判斷 parent_summary 是「AI 沒生成」還是「格式/欄位名不對被解析丟失」。
+    if (learnerType === "Young Learner") {
+      console.log("[YL診斷] learner_type =", learnerType);
+      console.log("[YL診斷] hidden_gem =", JSON.stringify(report.hidden_gem));
+      console.log("[YL診斷] next_challenge =", JSON.stringify(report.next_challenge));
+      console.log("[YL診斷] parent_summary =", JSON.stringify(report.parent_summary));
+      console.log("[YL診斷] 所有 top-level keys =", Object.keys(report).join(", "));
+    }
+
     // 里程碑判斷（連續週數 Sprint 3 才完整實作，先用 0）
     const milestone = checkMilestone(
       completedCount ?? 0,
