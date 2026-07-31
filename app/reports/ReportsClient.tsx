@@ -239,13 +239,11 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           {isYoungLearner && (
             <div className="rounded-xl p-4 text-[12px] leading-[1.7]"
               style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)', color: C.navy }}>
-              <div className="font-semibold mb-1.5" style={{ color: C.gold }}>Young Learner report — who sees what</div>
+              <div className="font-semibold mb-1.5" style={{ color: C.gold }}>Young Learner report</div>
               <div style={{ color: C.muted }}>
                 <span style={{ color: C.navy, fontWeight: 600 }}>Student sees:</span> Hidden Gem, Vocabulary, Phrases, Writing Practice, Next Challenge.
                 <br />
-                <span style={{ color: C.navy, fontWeight: 600 }}>Teacher only:</span> Summary, What They Did Well, Areas to Improve, Next Lesson Focus.
-                <br />
-                <span style={{ color: C.navy, fontWeight: 600 }}>Parents only:</span> Parent Summary.
+                <span style={{ color: C.navy, fontWeight: 600 }}>Parents see:</span> Parent Summary.
               </div>
             </div>
           )}
