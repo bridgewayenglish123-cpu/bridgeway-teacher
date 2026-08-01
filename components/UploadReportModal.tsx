@@ -476,7 +476,7 @@ export function UploadReportModal({
               {/* Student Performance */}
               <div>
                 <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
-                  What happened in today\'s lesson? *
+                  What happened in today\'s lesson? * <span style={{ fontWeight: 400, color: C.muted }}>&mdash; topic, activities, how it went</span>
                   <span className="ml-2 font-normal" style={{ color: performanceWordCount >= 20 ? C.green : C.amber }}>
                     {performanceWordCount} words {performanceWordCount < 20 ? "(min. 20)" : "✓"}
                   </span>
@@ -491,7 +491,7 @@ export function UploadReportModal({
               {/* Memorable Moment */}
               <div>
                 <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
-                  Any memorable moment or notable quote? <span style={{ fontWeight: 400 }}>(optional)</span>
+                  A memorable moment or quote? <span style={{ fontWeight: 400, color: C.muted }}>(optional) &mdash; becomes the highlight</span>
                 </label>
                 <textarea value={manualMoment} onChange={e => setManualMoment(e.target.value)} rows={2}
                   placeholder={"e.g. Nancy said \'I want to make the beef noodle soup that my grandma teached me\' — she used \'teached\' instead of \'taught\'"}
@@ -503,7 +503,7 @@ export function UploadReportModal({
               {/* Areas to Improve */}
               <div>
                 <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
-                  What does the student need to improve? <span style={{ fontWeight: 400 }}>(optional)</span>
+                  What does the student need to improve? * <span style={{ fontWeight: 400, color: C.muted }}>&mdash; becomes the error analysis</span>
                 </label>
                 <textarea value={manualErrors} onChange={e => setManualErrors(e.target.value)} rows={2}
                   placeholder={"e.g. Past tense irregular verbs (eat→ate, go→went)\nMispronouncing \'shrimp\' and \'olive oil\'"}
@@ -894,7 +894,7 @@ export function UploadReportModal({
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
               <Btn kind="gold" size="sm"
                 onClick={() => setStep("vocab")}
-                disabled={manualPerformance.trim().split(/\s+/).filter(Boolean).length < 20}>
+                disabled={manualPerformance.trim().split(/\s+/).filter(Boolean).length < 20 || !manualErrors.trim()}>
                 Next: Add Vocabulary →
               </Btn>
             </>
