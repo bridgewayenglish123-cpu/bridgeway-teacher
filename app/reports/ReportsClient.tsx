@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { C } from '@/lib/constants'
 import { UploadReportModal } from '@/components/UploadReportModal'
+import { HomeworkEditor } from '@/components/HomeworkEditor'
 
 type Report = {
   id: string
@@ -17,6 +18,7 @@ type Report = {
   errors: { pattern?: string; pattern_en?: string; pattern_zh?: string; count?: number; example?: string; correction?: string; tip_en?: string }[] | null
   next_focus: { zh?: string; en?: string } | string | null
   homework: { zh?: string; en?: string } | string | null
+  homework_translate_count?: number | null
   comparison: { summary_zh?: string; summary_en?: string } | null
   hidden_gem: { zh?: string; en?: string } | string | null
   next_challenge: { zh?: string; en?: string } | string | null
@@ -380,12 +382,11 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
           )}
 
           {/* Homework — 老師原文(en),學生端會顯示雙語 */}
-          {pickEn(report.homework) && (
-            <div className="rounded-xl p-4" style={{ background: '#F0FDF4', border: '1px solid rgba(22,101,52,0.25)' }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: '#166534' }}>Homework</div>
-              <p className="text-[13px] leading-[1.8] whitespace-pre-line" style={{ color: C.navy }}>{pickEn(report.homework)}</p>
-            </div>
-          )}
+          <HomeworkEditor
+            reportId={report.id}
+            initialEn={pickEn(report.homework)}
+            initialCount={report.homework_translate_count ?? 0}
+          />
         </div>
       </div>
     )
