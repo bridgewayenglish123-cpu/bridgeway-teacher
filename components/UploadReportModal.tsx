@@ -518,12 +518,15 @@ export function UploadReportModal({
                   <span className="ml-2 font-normal" style={{ color: errorsWordCount >= 8 ? C.green : C.amber }}>
                     {errorsWordCount} words {errorsWordCount < 8 ? "(min. 8)" : "\u2713"}
                   </span>
+                  <span className="ml-2 font-normal" style={{ color: errorsWordCount >= 8 ? C.green : C.amber }}>
+                    {errorsWordCount} words {errorsWordCount < 8 ? "(min. 8)" : "\u2713"}
+                  </span>
                 </label>
                 <textarea value={manualErrors} onChange={e => setManualErrors(e.target.value)} rows={2}
                   placeholder={"e.g. Past tense irregular verbs (eat→ate, go→went)\nMispronouncing \'shrimp\' and \'olive oil\'"}
                   className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
                   style={{ borderColor: C.line, color: C.navy }} />
-                <FieldHint>List specific errors or patterns. One per line.</FieldHint>
+                <FieldHint>Include the student&rsquo;s actual words where you can &mdash; e.g. Said &ldquo;I go yesterday&rdquo; (should be &ldquo;went&rdquo;). This lets the report analyse real mistakes instead of inventing examples.</FieldHint>
               </div>
 
               {/* Next Lesson Focus */}
