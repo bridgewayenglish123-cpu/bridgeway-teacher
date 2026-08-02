@@ -258,6 +258,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     {
       "word": "actually",
       "type": "word",
+      "pronunciation": "音節式發音,用大寫標重音音節、連字號分音節,讓學生看得懂怎麼念(不要用 IPA 國際音標符號)。例:actually → AK-choo-uh-lee, appetizer → AP-uh-tai-zer, spinach → SPIN-ich, lasagna → luh-ZAHN-yuh。每個單字都要提供。",
       "definition_zh": "實際上、事實上",
       "definition_en": "used to emphasize what is really true",
       "example_en": "I thought it would be boring, but it was actually really fun.",
