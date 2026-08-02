@@ -518,9 +518,6 @@ export function UploadReportModal({
                   <span className="ml-2 font-normal" style={{ color: errorsWordCount >= 8 ? C.green : C.amber }}>
                     {errorsWordCount} words {errorsWordCount < 8 ? "(min. 8)" : "\u2713"}
                   </span>
-                  <span className="ml-2 font-normal" style={{ color: errorsWordCount >= 8 ? C.green : C.amber }}>
-                    {errorsWordCount} words {errorsWordCount < 8 ? "(min. 8)" : "\u2713"}
-                  </span>
                 </label>
                 <textarea value={manualErrors} onChange={e => setManualErrors(e.target.value)} rows={2}
                   placeholder={"e.g. Past tense irregular verbs (eat→ate, go→went)\nMispronouncing \'shrimp\' and \'olive oil\'"}
