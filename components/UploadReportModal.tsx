@@ -372,6 +372,8 @@ export function UploadReportModal({
   const currentOrder = stepOrder[step] ?? 0;
 
   const performanceWordCount = manualPerformance.trim().split(/\s+/).filter(Boolean).length;
+  const momentWordCount = manualMoment.trim().split(/\s+/).filter(Boolean).length;
+  const errorsWordCount = manualErrors.trim().split(/\s+/).filter(Boolean).length;
   const manualVocabReady = extraWords.length + extraPhrases.length > 0;
 
   return (
@@ -497,7 +499,10 @@ export function UploadReportModal({
               {/* Memorable Moment */}
               <div>
                 <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
-                  A memorable moment or quote? <span style={{ fontWeight: 400, color: C.muted }}>(optional) &mdash; becomes the highlight</span>
+                  A memorable moment or quote? * <span style={{ fontWeight: 400, color: C.muted }}>&mdash; becomes the highlight</span>
+                  <span className="ml-2 font-normal" style={{ color: momentWordCount >= 10 ? C.green : C.amber }}>
+                    {momentWordCount} words {momentWordCount < 10 ? "(min. 10)" : "\u2713"}
+                  </span>
                 </label>
                 <textarea value={manualMoment} onChange={e => setManualMoment(e.target.value)} rows={2}
                   placeholder={"e.g. Nancy said \'I want to make the beef noodle soup that my grandma teached me\' — she used \'teached\' instead of \'taught\'"}
@@ -510,6 +515,9 @@ export function UploadReportModal({
               <div>
                 <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
                   What does the student need to improve? * <span style={{ fontWeight: 400, color: C.muted }}>&mdash; becomes the error analysis</span>
+                  <span className="ml-2 font-normal" style={{ color: errorsWordCount >= 8 ? C.green : C.amber }}>
+                    {errorsWordCount} words {errorsWordCount < 8 ? "(min. 8)" : "\u2713"}
+                  </span>
                 </label>
                 <textarea value={manualErrors} onChange={e => setManualErrors(e.target.value)} rows={2}
                   placeholder={"e.g. Past tense irregular verbs (eat→ate, go→went)\nMispronouncing \'shrimp\' and \'olive oil\'"}
@@ -923,7 +931,7 @@ export function UploadReportModal({
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
               <Btn kind="gold" size="sm"
                 onClick={() => setStep("vocab")}
-                disabled={manualPerformance.trim().split(/\s+/).filter(Boolean).length < 20 || !manualErrors.trim()}>
+                disabled={performanceWordCount < 20 || momentWordCount < 10 || errorsWordCount < 8}>
                 Next: Add Vocabulary →
               </Btn>
             </>
