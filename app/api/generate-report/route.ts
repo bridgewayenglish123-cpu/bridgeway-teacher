@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY!);
 
   try {
-    const { lessonId, vttContent, teacherNote, existingReportId, manualInput, confirmedVocab } =
+    const { lessonId, vttContent, teacherNote, existingReportId, manualInput, confirmedVocab, nextFocus, homework } =
       await request.json();
 
     if (!lessonId || (!vttContent && !manualInput)) {
@@ -128,8 +128,7 @@ export async function POST(request: Request) {
 學生課堂表現：${manualInput?.performance || ""}
 本課重點單字：${manualInput?.vocabulary || "（老師未填）"}
 本課重點片語：${manualInput?.phrases || "（老師未填）"}
-需要加強的地方：${manualInput?.errors || "（老師未填）"}
-下堂課建議：${manualInput?.nextFocus || "（老師未填）"}`;
+需要加強的地方：${manualInput?.errors || "（老師未填）"}`;
 
     const previousSummary = (previousReports ?? [])
       .map((r: any) => ({
@@ -322,7 +321,8 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "headline": "Annie, you made real progress today.",
     "body": "Specific, warm English analysis, 2-4 sentences."
   },
-  "next_focus": "2-4 specific teaching recommendations based on what this student needs most. Written in English. Each recommendation on its own line, no numbering, no bullet points.",
+  "next_focus_zh": "把老師提供的「下堂重點」原文翻譯成繁體中文。只翻譯,不改寫、不優化、不增減內容。若老師未提供則回 null。",
+  "homework_zh": "把老師提供的「回家作業」原文翻譯成繁體中文。只翻譯,不改寫、不優化、不增減內容。若老師未提供則回 null。",
   "reflection_question": {
     "zh": "針對本課學習點的語言輸出練習題（用中文說明）。必須是造句、口說或寫作練習，例如：用今天學的單字造一個關於自己生活的句子，或用英文寫3句描述最近做的事（用過去式）。禁止問課文情節或故事內容。",
     "en": "A language output practice prompt directly tied to today's learning point. Must be a speaking or writing exercise, e.g. use a vocabulary word in a sentence about your own life, or write 3 sentences about something you did recently using past tense. Do NOT ask about the story plot or characters."
@@ -361,6 +361,16 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     // 會把老師當初上傳時打的 note 洗成 null。改由 INSERT / UPDATE 分開處理:
     // - INSERT(首次生成):直接寫入傳入的 note
     // - UPDATE(重新生成):只有這次真的有帶 note 才更新,否則保留原本的
+    // next_focus / homework:老師主導,系統不生成內容。
+    // en = 老師原文(直接保留,一字不改);zh = AI 翻譯(只譯不改)。
+    // 老師沒填 homework 則整個為 null。next_focus 前端強制必填。
+    const nextFocusObj = (nextFocus && String(nextFocus).trim())
+      ? { en: String(nextFocus).trim(), zh: report.next_focus_zh ?? null }
+      : null;
+    const homeworkObj = (homework && String(homework).trim())
+      ? { en: String(homework).trim(), zh: report.homework_zh ?? null }
+      : null;
+
     const reportFields = {
       // 不存逐字稿:它只是 AI 分析的原料,生成後就無用途(學生看不到,
       // 重新生成也是靠前端重新上傳 VTT,不從這裡讀)。存了只會佔空間 —
@@ -373,7 +383,8 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
       strengths: report.strengths,
       errors: report.errors,
       comparison: report.comparison,
-      next_focus: report.next_focus,
+      next_focus: nextFocusObj,
+      homework: homeworkObj,
       // 這三個欄位 AI 有生成,但先前 reportFields 漏了它們,導致永遠寫不進資料庫、
       // 一直是 null(Young Learner 的 hidden_gem/parent_summary/next_challenge 尤其明顯)。
       hidden_gem: report.hidden_gem ?? null,
