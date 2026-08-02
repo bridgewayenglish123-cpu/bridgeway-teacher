@@ -68,6 +68,9 @@ export function UploadReportModal({
   const [manualMoment, setManualMoment] = useState("");
   const [manualErrors, setManualErrors] = useState("");
   const [manualNextFocus, setManualNextFocus] = useState("");
+  // next focus(必填)+ homework(選填),兩模式都在 Review 步驟填,老師寫英文原文
+  const [nextFocusInput, setNextFocusInput] = useState("");
+  const [homeworkInput, setHomeworkInput] = useState("");
   // 重新生成時帶出既有 note,老師才看得到當初打的內容(可保留可修改)
   const [note, setNote] = useState(initialNote ?? "");
 
@@ -305,6 +308,8 @@ export function UploadReportModal({
       // 並附上 forced 清單(拼寫查無但老師堅持加入的字),供後端提示 Claude 謹慎處理。
       const body = {
         lessonId, vttContent, teacherNote: note, existingReportId,
+        nextFocus: nextFocusInput,
+        homework: homeworkInput,
         confirmedVocab: {
           words: finalWords,
           phrases: finalPhrases,
@@ -334,8 +339,9 @@ export function UploadReportModal({
           vocabulary: extraWords.join(", "),
           phrases: extraPhrases.join(", "),
           errors: manualErrors,
-          nextFocus: manualNextFocus,
         },
+        nextFocus: nextFocusInput,
+        homework: homeworkInput,
         // 與 VTT 模式一致:老師手動填的單字/片語直接指定給 AI「照用不改」,
         // 並附 forced 清單讓拼寫存疑字得到謹慎處理。
         confirmedVocab: {
@@ -822,6 +828,29 @@ export function UploadReportModal({
                 </div>
               </div>
 
+              {/* Next Focus(必填)+ Homework(選填)— 老師寫英文,系統翻譯中文給學生 */}
+              <div>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  Next lesson focus * <span style={{ fontWeight: 400, color: C.muted }}>&mdash; your plan, shown to the student</span>
+                </label>
+                <textarea value={nextFocusInput} onChange={e => setNextFocusInput(e.target.value)} rows={3}
+                  placeholder={"What will you focus on next lesson? Write in English — the student sees it in both English and Chinese.\n\ne.g. Review irregular past tense verbs and practise using them in short stories about your week."}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
+                  style={{ borderColor: nextFocusInput.trim() ? C.line : C.amber, color: C.navy }} />
+                <FieldHint>You write in English. The student sees your exact words, plus a Chinese translation.</FieldHint>
+              </div>
+
+              <div>
+                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
+                  Homework <span style={{ fontWeight: 400, color: C.muted }}>(optional) &mdash; kept exactly as you write it</span>
+                </label>
+                <textarea value={homeworkInput} onChange={e => setHomeworkInput(e.target.value)} rows={3}
+                  placeholder={"Any homework for the student? Write in English — it is preserved word-for-word, never rewritten.\n\ne.g. Write 5 sentences about what you did last weekend using past tense verbs."}
+                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
+                  style={{ borderColor: C.line, color: C.navy }} />
+                <FieldHint>Your exact words are kept. The student sees them with a Chinese translation.</FieldHint>
+              </div>
+
               {/* Quality reminder for manual */}
               {mode === "manual" && (
                 <div className="rounded-xl p-3 text-[12px] leading-relaxed" style={{ background: "#EEF2FF", color: "#3730A3" }}>
@@ -919,8 +948,12 @@ export function UploadReportModal({
           )}
           {step === "confirm" && (
             <>
+              {!nextFocusInput.trim() && (
+                <span className="text-[12px] self-center mr-1" style={{ color: C.amber }}>Next lesson focus is required</span>
+              )}
               <Btn kind="ghost" size="sm" onClick={() => setStep("vocab")}>← Back</Btn>
-              <Btn kind="gold" size="sm" onClick={mode === "manual" ? handleManualGenerate : handleGenerate}>
+              <Btn kind="gold" size="sm" onClick={mode === "manual" ? handleManualGenerate : handleGenerate}
+                disabled={!nextFocusInput.trim()}>
                 {suspectWords.length > 0 ? "Generate Anyway" : "Generate Report"}
               </Btn>
             </>
