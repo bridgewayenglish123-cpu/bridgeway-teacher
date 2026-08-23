@@ -526,17 +526,7 @@ export function UploadReportModal({
                 <FieldHint>Include the student&rsquo;s actual words where you can &mdash; e.g. Said &ldquo;I go yesterday&rdquo; (should be &ldquo;went&rdquo;). This lets the report analyse real mistakes instead of inventing examples.</FieldHint>
               </div>
 
-              {/* Next Lesson Focus */}
-              <div>
-                <label className="text-[12px] font-semibold mb-1 block" style={{ color: C.muted }}>
-                  What will you focus on next lesson? <span style={{ fontWeight: 400 }}>(optional)</span>
-                </label>
-                <textarea value={manualNextFocus} onChange={e => setManualNextFocus(e.target.value)} rows={2}
-                  placeholder={"e.g. Practice narrating past events using irregular verbs\nIntroduce more sequencing vocabulary"}
-                  className="w-full rounded-xl border px-3 py-2 text-[13px] resize-none outline-none"
-                  style={{ borderColor: C.line, color: C.navy }} />
-                <FieldHint>Your plan for the next session.</FieldHint>
-              </div>
+
 
               {/* Teacher Note */}
               <div>
