@@ -303,6 +303,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "summary_zh": "這堂課你的文法錯誤比上堂課減少了 2 次，主動提問增加了 2 次。",
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
+  "parent_summary": "[CRITICAL — 必須最先生成] If learner_type is Young Learner: MUST return an object with zh and en based on today's lesson content. NEVER return null. Keep it to 2 sentences max each. If NOT Young Learner: return null.",
   "hidden_gem": {
     "_note": "一個今天課堂中的具體亮點時刻。Young Learner/Junior 必填,Adult 沒有值得說的可整個為 null。zh 與 en 都要提供。",
     "zh": "溫暖、故事感的繁體中文 2-3 句",
@@ -313,7 +314,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "zh": "繁體中文 1-2 句,帶點期待感",
     "en": "The same challenge in English, 1-2 sentences, encouraging tone"
   },
-  "parent_summary": "[CRITICAL] If learner_type is Young Learner: MUST return an object with zh and en. NEVER return null for Young Learner. Example: { \"zh\": \"今天 Mia 學習了日常生活詞彙，包括 morning、night 和 wake up。她能夠用完整的句子回答問題，這是非常好的進步！建議在家可以和 Mia 練習說說看今天做了什麼。\", \"en\": \"Today Mia learned daily routine vocabulary including morning, night, and wake up. She was able to answer in full sentences — a wonderful step forward! At home, try asking her about her daily routine in English.\" }. If learner_type is NOT Young Learner: return null.",
+
   "analysis_zh": {
     "headline": "Annie，你這堂課真的有進步。",
     "body": "具體、有溫度的中文分析，2-4句。"
@@ -333,7 +334,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     // Claude API 呼叫
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 8000,
+      max_tokens: 5000,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -390,11 +391,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
       // 一直是 null(Young Learner 的 hidden_gem/parent_summary/next_challenge 尤其明顯)。
       hidden_gem: report.hidden_gem ?? null,
       next_challenge: report.next_challenge ?? null,
-      // Young Learner 必須有 parent_summary，AI 回 null 時強制填入預設內容
-      parent_summary: report.parent_summary ?? (learnerType === 'Young Learner' ? {
-        zh: `今天${student.en_name ?? student.zh_name}上了一堂很棒的英文課！老師觀察到她在課堂中認真參與，有在進步。建議在家可以用英文跟她聊聊今天學了什麼，鼓勵她說說看。`,
-        en: `${student.en_name ?? student.zh_name} had a great English lesson today! The teacher observed active participation and real progress. At home, try asking her in English what she learned today to encourage her to practise.`
-      } : null),
+      parent_summary: report.parent_summary ?? null,
       milestone,
     };
 
