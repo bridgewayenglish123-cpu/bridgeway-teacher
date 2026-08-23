@@ -310,11 +310,7 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "zh": "繁體中文 1-2 句,帶點期待感",
     "en": "The same challenge in English, 1-2 sentences, encouraging tone"
   },
-  "parent_summary": {
-    "_note": "僅 Young Learner 提供且必填,其他類型整個為 null。給家長的摘要:今天學了什麼、一個驕傲的進步、一個在家鼓勵的方向、需加強處(正向措辭)。zh 與 en 都要提供。",
-    "zh": "繁體中文 2-3 句",
-    "en": "The same summary for parents in English, 2-3 sentences"
-  },
+  "parent_summary": "[CRITICAL] If learner_type is Young Learner: MUST return an object with zh and en. NEVER return null for Young Learner. Example: { \"zh\": \"今天 Mia 學習了日常生活詞彙，包括 morning、night 和 wake up。她能夠用完整的句子回答問題，這是非常好的進步！建議在家可以和 Mia 練習說說看今天做了什麼。\", \"en\": \"Today Mia learned daily routine vocabulary including morning, night, and wake up. She was able to answer in full sentences — a wonderful step forward! At home, try asking her about her daily routine in English.\" }. If learner_type is NOT Young Learner: return null.",
   "analysis_zh": {
     "headline": "Annie，你這堂課真的有進步。",
     "body": "具體、有溫度的中文分析，2-4句。"
