@@ -375,10 +375,20 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     let parentSummary: { zh: string; en: string } | null = null;
     if (learnerType === 'Young Learner') {
       try {
-        const psPrompt = `你是英文補習班老師，剛完成一堂 Young Learner（兒童）的英文課。請根據以下課堂資訊，寫一份給家長看的簡短摘要。
+        const vocabList = [
+          ...((report.vocabulary as any[]) ?? []).map((v: any) => v.word).filter(Boolean),
+          ...((report.phrases as any[]) ?? []).map((p: any) => p.phrase).filter(Boolean),
+        ].join(", ");
+
+        const psPrompt = `你是英文補習班老師，剛完成一堂 Young Learner（兒童）的英文課。請根據以下已生成的報告內容，寫一份給家長看的簡短摘要。
 
 學生姓名：${student.en_name ?? student.zh_name}
-課堂內容：${transcript.slice(0, 800)}
+本堂課學習的單字與片語：${vocabList || "（無）"}
+老師的分析（中文）：${(report.analysis_zh as any)?.body ?? ""}
+老師注意到的亮點：${(report.hidden_gem as any)?.zh ?? ""}
+需要加強的地方：${((report.errors as any[]) ?? []).map((e: any) => e.pattern_zh ?? e.pattern).filter(Boolean).join("、") || "（無）"}
+
+【重要】只根據上方資訊寫摘要，不可加入任何上方沒有提到的單字、例句或課堂細節。
 
 請回傳 JSON 格式（不加任何其他文字）：
 {
