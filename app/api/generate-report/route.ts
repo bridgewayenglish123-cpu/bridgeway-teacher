@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     // 查詢學生資訊
     const { data: student } = await admin
       .from("students")
-      .select("id, en_name, zh_name, zoom_email, learning_goal")
+      .select("id, en_name, zh_name, zoom_email, learning_goal, learner_type, level")
       .eq("id", lesson.student_id)
       .single();
 
