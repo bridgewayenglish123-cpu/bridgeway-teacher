@@ -423,14 +423,32 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
       }
 
       // 只更新思考題題目，保留學生已寫的 response
+      // 若 reflection_responses 不存在（例如被刪除），則重新建立
       if (report.reflection_question) {
-        await admin
+        const { data: existingRef } = await admin
           .from("reflection_responses")
-          .update({
+          .select("id")
+          .eq("lesson_report_id", existingReportId)
+          .maybeSingle();
+
+        if (existingRef) {
+          await admin
+            .from("reflection_responses")
+            .update({
+              question_zh: report.reflection_question.zh,
+              question_en: report.reflection_question.en,
+            })
+            .eq("lesson_report_id", existingReportId);
+        } else {
+          await admin.from("reflection_responses").insert({
+            id: `rr_${nanoid(12)}`,
+            student_id: student.id,
+            lesson_report_id: existingReportId,
             question_zh: report.reflection_question.zh,
             question_en: report.reflection_question.en,
-          })
-          .eq("lesson_report_id", existingReportId);
+            response: null,
+          });
+        }
       }
     } else {
       // 首次生成：INSERT
