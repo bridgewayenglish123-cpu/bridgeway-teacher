@@ -17,6 +17,7 @@ type Report = {
   strengths: { zh: string; en?: string }[] | null
   errors: { pattern?: string; pattern_en?: string; pattern_zh?: string; count?: number; example?: string; correction?: string; tip_en?: string }[] | null
   next_focus: { zh?: string; en?: string } | string | null
+  next_focus_edit_count?: number | null
   homework: { zh?: string; en?: string } | string | null
   homework_translate_count?: number | null
   comparison: { summary_zh?: string; summary_en?: string } | null
@@ -378,12 +379,64 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
             </div>
           )}
 
-          {pickEn(report.next_focus) && (
-            <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider mb-2" style={{ color: C.gold }}>Next Lesson Focus</div>
-              <p className="text-[13px] leading-[1.8] whitespace-pre-line" style={{ color: C.navy }}>{pickEn(report.next_focus)}</p>
+          {/* Next Lesson Focus — 可編輯，上限5次 */}
+          <div className="rounded-xl p-4" style={{ background: '#FBF8EF', border: '1px solid rgba(194,153,47,0.3)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: C.gold }}>Next Lesson Focus</div>
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const editCount = nextFocusEditCount[report.id] ?? (report.next_focus_edit_count ?? 0)
+                  const atLimit = editCount >= 5
+                  return editingNextFocus !== report.id ? (
+                    <>
+                      {!atLimit && (
+                        <button onClick={() => { setEditingNextFocus(report.id); setNextFocusText(pickEn(report.next_focus) ?? '') }}
+                          className="text-[11px] px-2.5 py-1 rounded-lg transition hover:opacity-80"
+                          style={{ background: '#EDE9E0', color: C.navy }}>Edit</button>
+                      )}
+                      <span className="text-[10px]" style={{ color: C.muted }}>{editCount}/5</span>
+                    </>
+                  ) : (
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setEditingNextFocus(null)}
+                        className="text-[11px] px-2.5 py-1 rounded-lg"
+                        style={{ background: '#EDE9E0', color: C.muted }}>Cancel</button>
+                      <button disabled={nextFocusSaving || !nextFocusText.trim()}
+                        onClick={async () => {
+                          setNextFocusSaving(true)
+                          const res = await fetch('/api/next-focus', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ reportId: report.id, nextFocusEn: nextFocusText }),
+                          })
+                          const data = await res.json()
+                          if (data.ok) {
+                            ;(report as any).next_focus = data.nextFocus
+                            setNextFocusEditCount(prev => ({ ...prev, [report.id]: data.editCount }))
+                          }
+                          setEditingNextFocus(null)
+                          setNextFocusSaving(false)
+                        }}
+                        className="text-[11px] px-2.5 py-1 rounded-lg font-medium disabled:opacity-50"
+                        style={{ background: C.gold, color: '#fff' }}>
+                        {nextFocusSaving ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
+                  )
+                })()}
+              </div>
             </div>
-          )}
+            {editingNextFocus === report.id ? (
+              <textarea value={nextFocusText} onChange={e => setNextFocusText(e.target.value)}
+                rows={3} placeholder="e.g. We'll focus on past tense verbs next time."
+                className="w-full rounded-lg border px-3 py-2 text-[13px] resize-none outline-none"
+                style={{ borderColor: C.line, color: C.navy, background: '#fff' }} />
+            ) : pickEn(report.next_focus) ? (
+              <p className="text-[13px] leading-[1.8] whitespace-pre-line" style={{ color: C.navy }}>{pickEn(report.next_focus)}</p>
+            ) : (
+              <p className="text-[12px]" style={{ color: C.muted }}>No focus set yet. Click Edit to add.</p>
+            )}
+          </div>
 
           {/* Homework — 老師原文(en),學生端會顯示雙語 */}
           <HomeworkEditor

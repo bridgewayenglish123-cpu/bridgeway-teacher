@@ -32,7 +32,7 @@ export default async function ReportsPage() {
     .from('lesson_reports')
     .select(`
       id, created_at, milestone, analysis_zh, analysis_en,
-      vocabulary, phrases, strengths, errors, next_focus, homework, homework_translate_count, teacher_note,
+      vocabulary, phrases, strengths, errors, next_focus, next_focus_edit_count, homework, homework_translate_count, teacher_note,
       comparison, hidden_gem, next_challenge, parent_summary,
       lesson:lesson_id (
         id, date, time, duration,

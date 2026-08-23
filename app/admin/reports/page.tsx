@@ -18,7 +18,7 @@ export default async function AdminReportsPage() {
     .from('lesson_reports')
     .select(`
       id, created_at, milestone, analysis_zh, analysis_en,
-      vocabulary, phrases, strengths, errors, next_focus,
+      vocabulary, phrases, strengths, errors, next_focus, next_focus_edit_count, next_focus_edit_count,
       lesson:lesson_id (
         id, date, time, duration,
         student:students!student_id ( zh_name, en_name )
