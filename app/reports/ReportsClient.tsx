@@ -55,6 +55,10 @@ export function ReportsClient({ reports, teacherName }: { reports: Report[]; tea
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [noteText, setNoteText] = useState('')
   const [noteSaving, setNoteSaving] = useState(false)
+  const [editingNextFocus, setEditingNextFocus] = useState<string | null>(null)
+  const [nextFocusText, setNextFocusText] = useState('')
+  const [nextFocusSaving, setNextFocusSaving] = useState(false)
+  const [nextFocusEditCount, setNextFocusEditCount] = useState<Record<string, number>>({})
 
   // Overview page
   const [overviewPage, setOverviewPage] = useState(1)
