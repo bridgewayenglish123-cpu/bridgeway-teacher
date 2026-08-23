@@ -233,7 +233,6 @@ ${learnerType === "Young Learner" ? `
 
 2. next_challenge(必填,含 zh 與 en):給孩子一個下堂課前的小挑戰,針對弱點,像遊戲闖關的語氣。zh 繁中 1-2 句,en 對應英文。兩個版本都禁止 null。
 
-3. parent_summary(必填,含 zh 與 en):給家長的摘要。包含今天學了什麼、一個驕傲的進步、一個在家鼓勵的方向、需加強處(正向措辭)。zh 繁中 2-3 句,en 對應英文。兩個版本都禁止 null。
 
 這三個欄位是 Young Learner 報告的核心,比任何其他規則都優先。生成前務必再次檢查:這三個欄位都有實際內容了嗎?
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -303,7 +302,6 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
     "summary_zh": "這堂課你的文法錯誤比上堂課減少了 2 次，主動提問增加了 2 次。",
     "summary_en": "You made 2 fewer grammar errors and asked 2 more questions than last lesson."
   },
-  "parent_summary": "[CRITICAL — 必須最先生成] If learner_type is Young Learner: MUST return an object with zh and en based on today's lesson content. NEVER return null. Keep it to 2 sentences max each. If NOT Young Learner: return null.",
   "hidden_gem": {
     "_note": "一個今天課堂中的具體亮點時刻。Young Learner/Junior 必填,Adult 沒有值得說的可整個為 null。zh 與 en 都要提供。",
     "zh": "溫暖、故事感的繁體中文 2-3 句",
@@ -391,9 +389,42 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
       // 一直是 null(Young Learner 的 hidden_gem/parent_summary/next_challenge 尤其明顯)。
       hidden_gem: report.hidden_gem ?? null,
       next_challenge: report.next_challenge ?? null,
-      parent_summary: report.parent_summary ?? null,
+      parent_summary: parentSummary,
       milestone,
     };
+
+    // Young Learner: 獨立生成 parent_summary
+    let parentSummary: { zh: string; en: string } | null = null;
+    if (learnerType === 'Young Learner') {
+      try {
+        const psPrompt = `你是英文補習班老師，剛完成一堂 Young Learner（兒童）的英文課。請根據以下課堂資訊，寫一份給家長看的簡短摘要。
+
+學生姓名：${student.en_name ?? student.zh_name}
+課堂內容：${transcript.slice(0, 800)}
+
+請回傳 JSON 格式（不加任何其他文字）：
+{
+  "zh": "繁體中文，2句。包含：今天學了什麼、一個值得驕傲的進步、一個在家可以練習的方向。",
+  "en": "English version, 2 sentences. Same content as zh."
+}`;
+
+        const psMsg = await anthropic.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 500,
+          messages: [{ role: "user", content: psPrompt }],
+        });
+        const psBlock = psMsg.content[0];
+        if (psBlock && psBlock.type === "text") {
+          const psJson = psBlock.text
+            .replace(/^```(?:json)?\s*/i, "")
+            .replace(/\s*```$/i, "")
+            .trim();
+          parentSummary = JSON.parse(psJson);
+        }
+      } catch (e) {
+        console.error("parent_summary generation error:", e);
+      }
+    }
 
     let reportId: string;
 
