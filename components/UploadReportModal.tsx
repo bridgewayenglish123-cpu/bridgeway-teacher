@@ -920,7 +920,14 @@ export function UploadReportModal({
             <>
               <Btn kind="ghost" size="sm" onClick={onClose}>Cancel</Btn>
               <Btn kind="gold" size="sm"
-                onClick={() => setStep("vocab")}
+                onClick={() => {
+                  // manual mode 進入詞彙步驟時清空 VTT 殘留的 selectedWords/Phrases
+                  setSelectedWords(new Set());
+                  setSelectedPhrases(new Set());
+                  setCandidateWords([]);
+                  setCandidatePhrases([]);
+                  setStep("vocab");
+                }}
                 disabled={performanceWordCount < 20 || momentWordCount < 10 || errorsWordCount < 8}>
                 Next: Add Vocabulary →
               </Btn>
