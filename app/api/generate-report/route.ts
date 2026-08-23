@@ -371,28 +371,6 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
       ? { en: String(homework).trim(), zh: report.homework_zh ?? null }
       : null;
 
-    const reportFields = {
-      // 不存逐字稿:它只是 AI 分析的原料,生成後就無用途(學生看不到,
-      // 重新生成也是靠前端重新上傳 VTT,不從這裡讀)。存了只會佔空間 —
-      // 每份約 69 kB,是報告本體的 8 倍。改存 null,大幅節省資料庫容量。
-      transcript_vtt: null,
-      analysis_zh: report.analysis_zh,
-      analysis_en: report.analysis_en,
-      vocabulary: report.vocabulary,
-      phrases: report.phrases,
-      strengths: report.strengths,
-      errors: report.errors,
-      comparison: report.comparison,
-      next_focus: nextFocusObj,
-      homework: homeworkObj,
-      // 這三個欄位 AI 有生成,但先前 reportFields 漏了它們,導致永遠寫不進資料庫、
-      // 一直是 null(Young Learner 的 hidden_gem/parent_summary/next_challenge 尤其明顯)。
-      hidden_gem: report.hidden_gem ?? null,
-      next_challenge: report.next_challenge ?? null,
-      parent_summary: parentSummary,
-      milestone,
-    };
-
     // Young Learner: 獨立生成 parent_summary
     let parentSummary: { zh: string; en: string } | null = null;
     if (learnerType === 'Young Learner') {
@@ -425,6 +403,28 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
         console.error("parent_summary generation error:", e);
       }
     }
+
+    const reportFields = {
+      // 不存逐字稿:它只是 AI 分析的原料,生成後就無用途(學生看不到,
+      // 重新生成也是靠前端重新上傳 VTT,不從這裡讀)。存了只會佔空間 —
+      // 每份約 69 kB,是報告本體的 8 倍。改存 null,大幅節省資料庫容量。
+      transcript_vtt: null,
+      analysis_zh: report.analysis_zh,
+      analysis_en: report.analysis_en,
+      vocabulary: report.vocabulary,
+      phrases: report.phrases,
+      strengths: report.strengths,
+      errors: report.errors,
+      comparison: report.comparison,
+      next_focus: nextFocusObj,
+      homework: homeworkObj,
+      // 這三個欄位 AI 有生成,但先前 reportFields 漏了它們,導致永遠寫不進資料庫、
+      // 一直是 null(Young Learner 的 hidden_gem/parent_summary/next_challenge 尤其明顯)。
+      hidden_gem: report.hidden_gem ?? null,
+      next_challenge: report.next_challenge ?? null,
+      parent_summary: parentSummary,
+      milestone,
+    };
 
     let reportId: string;
 
