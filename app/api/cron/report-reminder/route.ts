@@ -20,6 +20,18 @@ export async function GET(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY!)
   const now = new Date()
 
+  // 查 reminder_start_date 設定
+  const { data: meta } = await admin
+    .from('app_meta')
+    .select('reminder_start_date')
+    .eq('id', 1)
+    .single()
+
+  const reminderStartDate = meta?.reminder_start_date ?? null
+  if (!reminderStartDate) {
+    return NextResponse.json({ ok: true, skipped: 'reminder_start_date not set' })
+  }
+
   // 查所有完課但無報告的課程（最近7天內）
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     .toISOString().slice(0, 10)
@@ -34,7 +46,7 @@ export async function GET(req: Request) {
     `)
     .eq('is_active', true)
     .eq('status', 'completed')
-    .gte('date', sevenDaysAgo)
+    .gte('date', reminderStartDate)
     .lt('report_reminder_sent', 3)
 
   if (!lessons || lessons.length === 0) {
