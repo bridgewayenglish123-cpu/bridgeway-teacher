@@ -1,0 +1,16 @@
+name: Report Reminder
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 每小時執行一次
+  workflow_dispatch:      # 可手動觸發測試
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger report reminder
+        run: |
+          curl -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://teacher.bridgewayenglish.net/api/cron/report-reminder
