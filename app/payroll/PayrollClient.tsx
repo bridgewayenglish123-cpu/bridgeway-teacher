@@ -11,6 +11,7 @@ type Lesson = {
   status: string
   class_type: string
   payout_snapshot: any
+  report_reminder_sent?: number | null
   student: { en_name: string | null; zh_name: string } | null
   report: { id: string; created_at: string }[] | null
 }
@@ -405,16 +406,22 @@ export function PayrollClient({ teacher, lessons, periods, extras, phpRate }: {
                     <span className="text-[10px] px-2 py-0.5 rounded-full"
                       style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Report</span>
                   ) : (
-                    <button
-                      onClick={() => setUploadTarget({
-                        lessonId: l.id,
-                        lessonDate: l.date,
-                        studentName: (l.student as any)?.en_name ?? (l.student as any)?.zh_name ?? 'Student',
-                      })}
-                      className="text-[10px] px-2 py-0.5 rounded-full font-medium transition hover:opacity-80"
-                      style={{ background: C.gold, color: '#fff' }}>
-                      Upload
-                    </button>
+                    <div className="flex flex-col items-end gap-1">
+                      {(l.report_reminder_sent ?? 0) >= 3 && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-full"
+                          style={{ background: '#FEE2E2', color: '#DC2626' }}>Pending</span>
+                      )}
+                      <button
+                        onClick={() => setUploadTarget({
+                          lessonId: l.id,
+                          lessonDate: l.date,
+                          studentName: (l.student as any)?.en_name ?? (l.student as any)?.zh_name ?? 'Student',
+                        })}
+                        className="text-[10px] px-2 py-0.5 rounded-full font-medium transition hover:opacity-80"
+                        style={{ background: C.gold, color: '#fff' }}>
+                        Upload
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
