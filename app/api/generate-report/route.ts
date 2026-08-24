@@ -59,6 +59,14 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
 
+    // 查詢 email 通知設定
+    const { data: appMeta } = await admin
+      .from("app_meta")
+      .select("email_notifications_enabled")
+      .eq("id", 1)
+      .single();
+    const emailEnabled = appMeta?.email_notifications_enabled ?? false;
+
     // 查詢課堂資訊
     const { data: lesson } = await admin
       .from("lessons")
@@ -529,8 +537,8 @@ ${teacherDirectInput}
       }
     }
 
-    // 發送 Email 通知
-    if (student.zoom_email) {
+    // 發送 Email 通知（只在 Admin 啟用時才發送）
+    if (emailEnabled && student.zoom_email) {
       await resend.emails.send({
         from: "Bridgeway Classroom <classroom@bridgewayenglish.net>",
         to: student.zoom_email,
