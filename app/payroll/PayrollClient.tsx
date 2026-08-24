@@ -1,6 +1,7 @@
 "use client"
 import { useState, useMemo } from 'react'
 import { C } from '@/lib/constants'
+import { UploadReportModal } from '@/components/UploadReportModal'
 
 type Lesson = {
   id: string
@@ -93,6 +94,9 @@ export function PayrollClient({ teacher, lessons, periods, extras, phpRate }: {
   phpRate: number
 }) {
   const [selectedPeriod, setSelectedPeriod] = useState<string | null>(null)
+  const [uploadTarget, setUploadTarget] = useState<{
+    lessonId: string; lessonDate: string; studentName: string
+  } | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [sort, setSort] = useState<Sort>('newest')
   const [search, setSearch] = useState('')
@@ -115,6 +119,25 @@ export function PayrollClient({ teacher, lessons, periods, extras, phpRate }: {
   )
 
   const periodExtras = extras.filter(e => e.period_key === activePeriod)
+
+  // 匯款倒數計算
+  const remitInfo = useMemo(() => {
+    const [y, m, d] = activePeriod.split('-').map(Number)
+    let remitDate: Date
+    if (d === 10) {
+      // 上半期：25號匯
+      remitDate = new Date(y, m - 1, 25)
+    } else {
+      // 下半期：次月10號匯
+      const nm = m === 12 ? 1 : m + 1
+      const ny = m === 12 ? y + 1 : y
+      remitDate = new Date(ny, nm - 1, 10)
+    }
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const diff = Math.ceil((remitDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return { remitDate: remitDate.toISOString().slice(0, 10), daysLeft: diff }
+  }, [activePeriod])
 
   // 統計
   const stats = useMemo(() => {
@@ -222,6 +245,43 @@ export function PayrollClient({ teacher, lessons, periods, extras, phpRate }: {
             </div>
           )}
         </div>
+
+        {/* 匯款倒數 */}
+        {!isPaid && (
+          <div className="mt-4 rounded-xl px-4 py-3 flex items-center justify-between"
+            style={{ background: 'rgba(255,255,255,0.08)' }}>
+            <div>
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: 'rgba(247,244,238,0.5)' }}>
+                Remittance Date
+              </div>
+              <div className="text-[14px] font-semibold mt-0.5" style={{ color: '#F7F4EE' }}>
+                {remitInfo.remitDate}
+              </div>
+            </div>
+            <div className="text-right">
+              {remitInfo.daysLeft > 0 ? (
+                <>
+                  <div className="font-serif text-[28px] font-bold leading-none"
+                    style={{ color: remitInfo.daysLeft <= 3 ? '#F87171' : remitInfo.daysLeft <= 7 ? '#FCD34D' : '#4ADE80' }}>
+                    {remitInfo.daysLeft}
+                  </div>
+                  <div className="text-[11px]" style={{ color: 'rgba(247,244,238,0.5)' }}>days left</div>
+                </>
+              ) : remitInfo.daysLeft === 0 ? (
+                <div className="text-[13px] font-bold" style={{ color: '#F87171' }}>Today!</div>
+              ) : (
+                <div className="text-[13px]" style={{ color: 'rgba(247,244,238,0.4)' }}>Passed</div>
+              )}
+            </div>
+          </div>
+        )}
+        {!isPaid && stats.pendingCount > 0 && (
+          <div className="mt-2 rounded-xl px-4 py-2.5 text-[12px]"
+            style={{ background: 'rgba(251,191,36,0.15)', color: '#FCD34D' }}>
+            ⚠ {stats.pendingCount} lesson{stats.pendingCount > 1 ? 's' : ''} still need a report.
+            {remitInfo.daysLeft > 0 ? ` Submit before ${remitInfo.remitDate} to be included.` : ' Period has ended.'}
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Completed', value: `${stats.total - stats.pendingCount} lessons`, sub: `PHP ${stats.payablePhp.toFixed(0)}` },
@@ -345,8 +405,16 @@ export function PayrollClient({ teacher, lessons, periods, extras, phpRate }: {
                     <span className="text-[10px] px-2 py-0.5 rounded-full"
                       style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Report</span>
                   ) : (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full"
-                      style={{ background: '#FEF3C7', color: '#92400E' }}>No report</span>
+                    <button
+                      onClick={() => setUploadTarget({
+                        lessonId: l.id,
+                        lessonDate: l.date,
+                        studentName: (l.student as any)?.en_name ?? (l.student as any)?.zh_name ?? 'Student',
+                      })}
+                      className="text-[10px] px-2 py-0.5 rounded-full font-medium transition hover:opacity-80"
+                      style={{ background: C.gold, color: '#fff' }}>
+                      Upload
+                    </button>
                   )}
                 </div>
               </div>
@@ -372,6 +440,67 @@ export function PayrollClient({ teacher, lessons, periods, extras, phpRate }: {
             </div>
           ))}
         </div>
+      )}
+      {/* 歷史薪資總覽 */}
+      {allPeriodKeys.length > 1 && (
+        <div className="rounded-2xl bg-white shadow-sm overflow-hidden mt-5">
+          <div className="px-5 py-3 border-b" style={{ borderColor: C.line }}>
+            <div className="text-[13px] font-semibold" style={{ color: C.navy }}>Payroll History</div>
+          </div>
+          <div className="divide-y" style={{ borderColor: C.line }}>
+            {allPeriodKeys.map(key => {
+              const keyLessons = lessons.filter(l => periodOf(l.date) === key)
+              const keyPhp = keyLessons
+                .filter(l => hasReport(l))
+                .reduce((s, l) => s + lessonPayoutPhp(l, phpRate), 0)
+              const keyExtras = extras
+                .filter(e => e.period_key === key)
+                .reduce((s, e) => s + e.amount_php, 0)
+              const keyPeriod = periods.find(p => p.period_key === key)
+              const keyPaid = keyPeriod?.paid ?? false
+              const keyPending = keyLessons.filter(l => !hasReport(l)).length
+
+              return (
+                <div key={key}
+                  className="px-5 py-3 flex items-center gap-3 cursor-pointer transition hover:bg-gray-50"
+                  onClick={() => setSelectedPeriod(key)}
+                  style={{ borderColor: C.line, background: activePeriod === key ? '#F0EDE6' : undefined }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium" style={{ color: C.navy }}>{periodLabel(key)}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: C.muted }}>
+                      {keyLessons.length} lessons
+                      {keyPending > 0 && <span style={{ color: '#92400E' }}> · {keyPending} no report</span>}
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-[14px] font-bold" style={{ color: C.navy }}>
+                      PHP {(keyPhp + keyExtras).toFixed(0)}
+                    </div>
+                    <div className="text-[11px] mt-0.5">
+                      {keyPaid ? (
+                        <span style={{ color: '#2E7D32' }}>✓ Paid</span>
+                      ) : (
+                        <span style={{ color: '#92400E' }}>Pending</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Upload Modal */}
+      {uploadTarget && (
+        <UploadReportModal
+          lessonId={uploadTarget.lessonId}
+          lessonDate={uploadTarget.lessonDate}
+          studentName={uploadTarget.studentName}
+          teacherName={teacher.teacher_name}
+          onGenerated={() => setUploadTarget(null)}
+          onClose={() => setUploadTarget(null)}
+        />
       )}
     </main>
   )
