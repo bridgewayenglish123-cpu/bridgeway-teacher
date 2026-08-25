@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { C } from '@/lib/constants'
 import { UploadReportModal } from '@/components/UploadReportModal'
+import { LessonChangeRequestModal } from '@/components/LessonChangeRequestModal'
 
 type Lesson = {
   id: string
@@ -23,6 +24,8 @@ export function DashboardClient({
 }) {
   const [uploadLesson, setUploadLesson] = useState<Lesson | null>(null)
   const [uploaded, setUploaded] = useState<Set<string>>(new Set())
+  const [changeLesson, setChangeLesson] = useState<Lesson | null>(null)
+  const [submitted, setSubmitted] = useState<Set<string>>(new Set())
 
   const pending = pendingReports.filter(l => !uploaded.has(l.id))
   const todayLessons = upcomingLessons.filter(l => l.date === todayStr)
@@ -125,8 +128,21 @@ export function DashboardClient({
                     {fmtTime(l.time)} · {l.duration ?? '?'} min
                   </div>
                 </div>
-                <div className="font-serif text-[20px] font-medium flex-shrink-0" style={{ color: C.navy }}>
-                  {fmtTime(l.time)}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="font-serif text-[20px] font-medium" style={{ color: C.navy }}>
+                    {fmtTime(l.time)}
+                  </div>
+                  {!submitted.has(l.id) && (
+                    <button onClick={() => setChangeLesson(l)}
+                      className="text-[11px] px-2.5 py-1.5 rounded-xl border transition hover:opacity-80"
+                      style={{ borderColor: C.line, color: C.muted, background: '#fff' }}>
+                      Report
+                    </button>
+                  )}
+                  {submitted.has(l.id) && (
+                    <span className="text-[11px] px-2.5 py-1.5 rounded-xl"
+                      style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Sent</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -151,6 +167,16 @@ export function DashboardClient({
                     {fmtTime(l.time)} · {l.duration ?? '?'} min
                   </div>
                 </div>
+                {!submitted.has(l.id) ? (
+                  <button onClick={() => setChangeLesson(l)}
+                    className="flex-shrink-0 text-[11px] px-2.5 py-1.5 rounded-xl border transition hover:opacity-80"
+                    style={{ borderColor: C.line, color: C.muted, background: '#fff' }}>
+                    Report
+                  </button>
+                ) : (
+                  <span className="flex-shrink-0 text-[11px] px-2.5 py-1.5 rounded-xl"
+                    style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Sent</span>
+                )}
               </div>
             ))}
           </div>
@@ -174,6 +200,18 @@ export function DashboardClient({
           />
         )
       })()}
+      {/* Change Request Modal */}
+      {changeLesson && (
+        <LessonChangeRequestModal
+          lesson={changeLesson}
+          teacherName={teacher.teacher_name}
+          onClose={() => setChangeLesson(null)}
+          onSubmitted={() => {
+            setSubmitted(prev => { const next = new Set(prev); next.add(changeLesson!.id); return next })
+            setChangeLesson(null)
+          }}
+        />
+      )}
     </main>
   )
 }
