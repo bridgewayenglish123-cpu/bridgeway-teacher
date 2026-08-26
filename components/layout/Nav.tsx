@@ -10,6 +10,7 @@ const links = [
   { href: '/students', label: 'Students', icon: '◉' },
   { href: '/reports', label: 'Reports', icon: '◫' },
   { href: '/payroll', label: 'Payroll', icon: '¥' },
+  { href: '/settings', label: 'Settings', icon: '⚙' },
 ]
 
 export function Nav({ teacherName }: { teacherName: string }) {
