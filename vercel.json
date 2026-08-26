@@ -3,11 +3,5 @@
     "app/api/generate-report/route.ts": {
       "maxDuration": 300
     }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/report-reminder",
-      "schedule": "0 * * * *"
-    }
-  ]
+  }
 }
