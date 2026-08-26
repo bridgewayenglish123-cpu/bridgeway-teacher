@@ -537,6 +537,13 @@ ${teacherDirectInput}
       }
     }
 
+    // 老師上傳報告後，自動標記課程為待確認完課
+    await admin
+      .from('lessons')
+      .update({ status: 'pending_confirmation', updated_at: new Date().toISOString() })
+      .eq('id', lessonId)
+      .eq('status', 'scheduled')  // 只改 scheduled 的，completed 的不動
+
     // 發送 Email 通知（只在 Admin 啟用時才發送）
     if (emailEnabled && student.zoom_email) {
       await resend.emails.send({
