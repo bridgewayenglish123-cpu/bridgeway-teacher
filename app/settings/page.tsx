@@ -15,7 +15,7 @@ export default async function SettingsPage() {
 
   const { data: teacher } = await admin
     .from('teachers')
-    .select('id, teacher_name, zoom_url')
+    .select('id, teacher_name, zoom_url, zoom_meeting_id, zoom_password')
     .eq('auth_user_id', user.id)
     .single()
 

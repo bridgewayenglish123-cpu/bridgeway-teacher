@@ -41,7 +41,7 @@ export async function GET(req: Request) {
     .select(`
       id, date, time, duration, class_type,
       reminder_24h_sent, reminder_1h_sent,
-      teacher:teachers!teacher_id ( id, teacher_name, email, zoom_url ),
+      teacher:teachers!teacher_id ( id, teacher_name, email, zoom_url, zoom_meeting_id, zoom_password ),
       student:students!student_id ( en_name, zh_name, zoom_email )
     `)
     .eq('is_active', true)
@@ -63,7 +63,12 @@ export async function GET(req: Request) {
 
     const teacherName = (teacher as any).teacher_name ?? 'Teacher'
     const teacherEmail = (teacher as any).email
-    const teacherZoom = (teacher as any).zoom_url ?? '（請確認 Zoom 連結）'
+    const teacherZoom = (teacher as any).zoom_url ?? ''
+    const zoomMeetingId = (teacher as any).zoom_meeting_id ?? ''
+    const zoomPassword = (teacher as any).zoom_password ?? ''
+    const zoomInfo = teacherZoom
+      ? `<a href="${teacherZoom}" style="color: #b8973a; font-weight: 600;">點此進入課室</a>${zoomMeetingId ? `<br><span style="font-size:12px;color:#6b7b8e;">Meeting ID：${zoomMeetingId}${zoomPassword ? ` · Password：${zoomPassword}` : ''}</span>` : ''}`
+      : '（請向老師確認 Zoom 連結）'
     const studentName = (student as any)?.en_name ?? (student as any)?.zh_name ?? 'Student'
     const studentEmail = (student as any)?.zoom_email
 
@@ -178,7 +183,7 @@ export async function GET(req: Request) {
                   <tr><td style="color: #6b7b8e; padding: 4px 0; width: 80px;">老師</td><td style="color: #1a2236; font-weight: 600;">${teacherName}</td></tr>
                   <tr><td style="color: #6b7b8e; padding: 4px 0;">時間</td><td style="color: #1a2236;">${lessonDateLabel}</td></tr>
                   <tr><td style="color: #6b7b8e; padding: 4px 0;">時長</td><td style="color: #1a2236;">${durationLabel}</td></tr>
-                  <tr><td style="color: #6b7b8e; padding: 4px 0;">Zoom</td><td><a href="${teacherZoom}" style="color: #b8973a; font-weight: 600;">點此進入課室</a></td></tr>
+                  <tr><td style="color: #6b7b8e; padding: 4px 0; vertical-align:top;">Zoom</td><td>${zoomInfo}</td></tr>
                 </table>
               </div>
               <div style="background: #FEF3C7; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #92400E;">

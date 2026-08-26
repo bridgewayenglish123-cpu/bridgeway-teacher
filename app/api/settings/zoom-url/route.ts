@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { zoomUrl } = await req.json()
+  const { zoomUrl, zoomMeetingId, zoomPassword } = await req.json()
 
   const admin = createAdminClient()
 
@@ -21,7 +21,12 @@ export async function POST(req: Request) {
 
   const { error } = await admin
     .from('teachers')
-    .update({ zoom_url: zoomUrl || null, updated_at: new Date().toISOString() })
+    .update({
+      zoom_url: zoomUrl || null,
+      zoom_meeting_id: zoomMeetingId || null,
+      zoom_password: zoomPassword || null,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', teacher.id)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
