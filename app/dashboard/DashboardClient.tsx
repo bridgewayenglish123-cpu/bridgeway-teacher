@@ -26,6 +26,9 @@ export function DashboardClient({
   const [uploaded, setUploaded] = useState<Set<string>>(new Set())
   const [changeLesson, setChangeLesson] = useState<Lesson | null>(null)
   const [submitted, setSubmitted] = useState<Set<string>>(new Set())
+  const [noShowLesson, setNoShowLesson] = useState<Lesson | null>(null)
+  const [noShowPending, setNoShowPending] = useState(false)
+  const [noShowDone, setNoShowDone] = useState<Set<string>>(new Set())
 
   const pending = pendingReports.filter(l => !uploaded.has(l.id))
   const todayLessons = upcomingLessons.filter(l => l.date === todayStr)
@@ -132,17 +135,30 @@ export function DashboardClient({
                   <div className="font-serif text-[20px] font-medium" style={{ color: C.navy }}>
                     {fmtTime(l.time)}
                   </div>
-                  {!submitted.has(l.id) && (
-                    <button onClick={() => setChangeLesson(l)}
-                      className="text-[11px] px-2.5 py-1.5 rounded-xl border transition hover:opacity-80"
-                      style={{ borderColor: C.line, color: C.muted, background: '#fff' }}>
-                      Report
-                    </button>
-                  )}
-                  {submitted.has(l.id) && (
-                    <span className="text-[11px] px-2.5 py-1.5 rounded-xl"
-                      style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Sent</span>
-                  )}
+                  <div className="flex gap-1.5">
+                    {!submitted.has(l.id) && !noShowDone.has(l.id) && (
+                      <>
+                        <button onClick={() => setChangeLesson(l)}
+                          className="text-[11px] px-2.5 py-1.5 rounded-xl border transition hover:opacity-80"
+                          style={{ borderColor: C.line, color: C.muted, background: '#fff' }}>
+                          Report
+                        </button>
+                        <button onClick={() => setNoShowLesson(l)}
+                          className="text-[11px] px-2.5 py-1.5 rounded-xl border transition hover:opacity-80"
+                          style={{ borderColor: '#FDE68A', color: '#92400E', background: '#FEF3C7' }}>
+                          No Show
+                        </button>
+                      </>
+                    )}
+                    {submitted.has(l.id) && (
+                      <span className="text-[11px] px-2.5 py-1.5 rounded-xl"
+                        style={{ background: '#E8F5E9', color: '#2E7D32' }}>✓ Sent</span>
+                    )}
+                    {noShowDone.has(l.id) && (
+                      <span className="text-[11px] px-2.5 py-1.5 rounded-xl"
+                        style={{ background: '#FEF3C7', color: '#92400E' }}>✓ No Show</span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -200,6 +216,52 @@ export function DashboardClient({
           />
         )
       })()}
+      {/* No Show Modal */}
+      {noShowLesson && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
+          style={{ background: 'rgba(26,34,54,0.55)' }}
+          onClick={e => { if (e.target === e.currentTarget) setNoShowLesson(null) }}>
+          <div className="w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+            <h3 className="font-serif text-[18px] font-semibold" style={{ color: '#1A2236' }}>
+              Report No Show
+            </h3>
+            <p className="text-[13px] leading-[1.7]" style={{ color: '#6B7B8E' }}>
+              Confirm that <strong>{(() => { const s = getStudent(noShowLesson); return s?.en_name ?? s?.zh_name ?? 'the student' })()}</strong> did not attend the lesson on <strong>{noShowLesson.date} {noShowLesson.time?.slice(0,5)}</strong>.
+            </p>
+            <div className="rounded-xl px-4 py-3 text-[12px]"
+              style={{ background: '#FEF3C7', color: '#92400E' }}>
+              You were present and ready. This lesson will be flagged for payroll.
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setNoShowLesson(null)}
+                className="px-4 py-2 rounded-xl text-[13px] font-medium border"
+                style={{ borderColor: '#E5E0D8', color: '#6B7B8E' }}>
+                Cancel
+              </button>
+              <button disabled={noShowPending}
+                onClick={async () => {
+                  setNoShowPending(true)
+                  try {
+                    await fetch('/api/lesson-no-show', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ lessonId: noShowLesson.id }),
+                    })
+                    setNoShowDone(prev => { const next = new Set(prev); next.add(noShowLesson!.id); return next })
+                    setNoShowLesson(null)
+                  } finally {
+                    setNoShowPending(false)
+                  }
+                }}
+                className="px-5 py-2 rounded-xl text-[13px] font-semibold disabled:opacity-50"
+                style={{ background: '#B8973A', color: '#fff' }}>
+                {noShowPending ? 'Submitting...' : 'Confirm No Show'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Change Request Modal */}
       {changeLesson && (
         <LessonChangeRequestModal
