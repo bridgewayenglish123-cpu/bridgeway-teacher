@@ -280,12 +280,14 @@ Adult（成人）：
 - Beginner/Elementary：tip 清楚說明規則，2-3句，可用術語但要解釋
 - Intermediate 以上：tip 深入分析錯誤原因，3-4句，可使用完整語法術語，說明為什麼錯、如何避免
 
-errors 數量上限（依年齡×程度）：
-- Young Learner + Beginner/Elementary：最多 2 個
-- Young Learner + Pre-Intermediate 以上：最多 3 個
-- Junior 任何程度：最多 3 個
-- Adult + Beginner/Elementary：最多 3 個
-- Adult + Intermediate 以上：最多 4 個
+errors 數量上限：
+- 老師提供的錯誤句子（errorSentences）：全部必須分析，一句都不能省略
+- AI 自行從逐字稿推斷的額外錯誤（老師未提供時）：
+  - Young Learner + Beginner/Elementary：最多 2 個
+  - Young Learner + Pre-Intermediate 以上：最多 3 個
+  - Junior 任何程度：最多 3 個
+  - Adult + Beginner/Elementary：最多 3 個
+  - Adult + Intermediate 以上：最多 4 個
 ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 vocabulary 至少 6 個、phrases 至少 3 個"}
 
 嚴格輸出以下 JSON 格式，不加任何其他文字、不加 markdown：
