@@ -67,6 +67,7 @@ export function UploadReportModal({
   const [manualPerformance, setManualPerformance] = useState("");
   const [manualMoment, setManualMoment] = useState("");
   const [manualErrors, setManualErrors] = useState("");
+  const [errorSentences, setErrorSentences] = useState<string[]>(['']);
   const [manualNextFocus, setManualNextFocus] = useState("");
   // next focus(必填)+ homework(選填),兩模式都在 Review 步驟填,老師寫英文原文
   const [nextFocusInput, setNextFocusInput] = useState("");
@@ -339,6 +340,7 @@ export function UploadReportModal({
           vocabulary: extraWords.join(", "),
           phrases: extraPhrases.join(", "),
           errors: manualErrors,
+          errorSentences: errorSentences.filter(s => s.trim()),
         },
         nextFocus: nextFocusInput,
         homework: homeworkInput,
@@ -527,6 +529,52 @@ export function UploadReportModal({
               </div>
 
 
+
+              {/* Error Sentences */}
+              <div>
+                <label className="text-[12px] font-semibold mb-2 block" style={{ color: C.muted }}>
+                  Student's exact error sentences <span style={{ fontWeight: 400 }}>(optional — AI will correct them)</span>
+                </label>
+                <div className="space-y-2">
+                  {errorSentences.map((s, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={s}
+                        onChange={e => {
+                          const next = [...errorSentences]
+                          next[i] = e.target.value
+                          setErrorSentences(next)
+                        }}
+                        placeholder={i === 0 ? 'e.g. I go to school yesterday.' : 'e.g. She have three cats.'}
+                        className="flex-1 rounded-xl border px-3 py-2 text-[13px] outline-none"
+                        style={{ borderColor: C.line, color: C.navy }}
+                      />
+                      {errorSentences.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setErrorSentences(prev => prev.filter((_, j) => j !== i))}
+                          className="text-[18px] leading-none flex-shrink-0 transition hover:opacity-60"
+                          style={{ color: C.muted }}>
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {errorSentences.length < 8 && (
+                  <button
+                    type="button"
+                    onClick={() => setErrorSentences(prev => [...prev, ''])}
+                    className="mt-2 text-[12px] font-medium px-3 py-1.5 rounded-xl border transition hover:opacity-80"
+                    style={{ borderColor: C.line, color: C.muted }}>
+                    ＋ Add another error
+                  </button>
+                )}
+                <div className="text-[11px] mt-1.5" style={{ color: C.muted }}>
+                  Write exactly what the student said. AI will analyse and correct each one.
+                </div>
+              </div>
 
               {/* Teacher Note */}
               <div>

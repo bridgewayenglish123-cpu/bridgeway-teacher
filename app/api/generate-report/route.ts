@@ -138,6 +138,8 @@ export async function POST(request: Request) {
 本課重點單字：${confirmedVocab?.words?.join(", ") || manualInput?.vocabulary || "（老師未填）"}
 本課重點片語：${confirmedVocab?.phrases?.join(", ") || manualInput?.phrases || "（老師未填）"}
 需要加強的地方：${manualInput?.errors || "（老師未填）"}
+學生實際說錯的句子（請逐一分析並更正）：
+${(manualInput?.errorSentences as string[] | undefined)?.filter((s: string) => s.trim()).map((s: string, i: number) => `  ${i + 1}. ${s}`).join("\n") || "（老師未填）"}
 
 特別說明：如果「值得記錄的課堂時刻」有填寫，請優先用這個具體時刻生成 hidden_gem，讓學生感覺被老師看見。`;
 
@@ -218,6 +220,7 @@ ${!vttContent ? `
 - 把老師簡短的描述,用完整的教學語言鋪陳成有深度的分析。不要因為老師寫得短,報告就潦草。
 - strengths / errors 即使老師只給關鍵字,也要擴展成具體、有教學價值的完整內容。
 - next_focus 直接使用老師提供的原文，不擴展、不改寫。
+- 如果老師提供了「學生實際說錯的句子」，errors 欄位必須優先使用這些真實例句作為 example，逐一分析錯誤類型並提供更正版本。這比自己推測更準確。
 
 【絕對禁止 — 不可虛構課堂事實】
 - 不可虛構「學生說過某句話」。只有老師在描述或難忘時刻中明確提供的學生原話,才能引用。老師沒提供,就不要編造學生的具體發言。
