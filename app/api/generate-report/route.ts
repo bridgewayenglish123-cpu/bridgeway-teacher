@@ -263,6 +263,7 @@ ${confirmedVocab && ((confirmedVocab.forcedWords || []).length > 0 || (confirmed
 - errors 每一項用 examples 陣列（不是單數 example），列出課堂中所有出現的錯誤例句（只能是英文）
 - examples 陣列裡每個物件的鍵名固定為 original（錯誤原句）和 correction（正確版本），不可用其他鍵名
 - 如果老師提供了「學生實際說錯的句子」，每一句都必須出現在 errors 的 examples 裡，不可省略
+- 每個 error 項目可選擇性加入 upgrade 欄位：根據學生想表達的意思，提供更自然、更豐富或更地道的替換說法。upgrade 是「更好的表達」，不是「更正錯誤」。格式為 { zh: "升級建議（中文說明）", en: "A more natural way to say this" }。不是每個錯誤都需要 upgrade，只在真的有更好的說法時才加。
 - reflection_question 必須是語言輸出練習（造句、口說、寫作），絕對不能問課文情節
 
 【errors 分析深度 — 依年齡×程度調整】
@@ -330,7 +331,11 @@ ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 v
         { "original": "I go to school yesterday", "correction": "I went to school yesterday" }
       ],
       "tip_zh": "過去式動詞要用 went，不是 go",
-      "tip_en": "Use 'went' for past tense, not 'go'"
+      "tip_en": "Use 'went' for past tense, not 'go'",
+      "upgrade": {
+        "zh": "也可以說『I walked to school yesterday』或『I took the bus yesterday』，讓句子更生動。",
+        "en": "You could also say 'I walked to school yesterday' or 'I took the bus yesterday' to make it more vivid."
+      }
     }
   ],
   "comparison": {
