@@ -262,7 +262,30 @@ ${confirmedVocab && ((confirmedVocab.forcedWords || []).length > 0 || (confirmed
 - errors 的 pattern 必須同時提供 pattern_zh（中文名稱）和 pattern_en（英文名稱）
 - errors 每一項用 examples 陣列（不是單數 example），列出課堂中所有出現的錯誤例句（只能是英文）
 - examples 陣列裡每個物件的鍵名固定為 original（錯誤原句）和 correction（正確版本），不可用其他鍵名
+- 如果老師提供了「學生實際說錯的句子」，每一句都必須出現在 errors 的 examples 裡，不可省略
 - reflection_question 必須是語言輸出練習（造句、口說、寫作），絕對不能問課文情節
+
+【errors 分析深度 — 依年齡×程度調整】
+tip_zh 和 tip_en 的說明方式必須符合學生年齡和程度：
+
+Young Learner（兒童）：
+- Beginner/Elementary：tip 用最簡單的中文說明，1句，不用術語。例：「記住：說昨天的事要用 went，不是 go！」
+- Pre-Intermediate 以上：tip 可稍微解釋規則，但仍要活潑，用比喻或遊戲語言
+
+Junior（青少年）：
+- Beginner/Elementary：tip 簡短直接，1-2句，可以用「升級技巧」的語氣
+- Intermediate 以上：tip 可以用基本語法術語，2-3句，說清楚規則
+
+Adult（成人）：
+- Beginner/Elementary：tip 清楚說明規則，2-3句，可用術語但要解釋
+- Intermediate 以上：tip 深入分析錯誤原因，3-4句，可使用完整語法術語，說明為什麼錯、如何避免
+
+errors 數量上限（依年齡×程度）：
+- Young Learner + Beginner/Elementary：最多 2 個
+- Young Learner + Pre-Intermediate 以上：最多 3 個
+- Junior 任何程度：最多 3 個
+- Adult + Beginner/Elementary：最多 3 個
+- Adult + Intermediate 以上：最多 4 個
 ${confirmedVocab ? "" : "- vocabulary 與 phrases 合計最多 20 個；其中 vocabulary 至少 6 個、phrases 至少 3 個"}
 
 嚴格輸出以下 JSON 格式，不加任何其他文字、不加 markdown：
